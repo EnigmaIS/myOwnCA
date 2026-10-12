@@ -1,0 +1,4088 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>myOwnCA · Setup</title>
+  <link rel="stylesheet" href="/theme.css" />
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, var(--hero-wash) 0, var(--hero-wash-clear) 18rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    .hidden { display: none !important; }
+
+    .setup-shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 52px;
+    }
+
+    .setup-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .brand-logo-hero {
+      display: block;
+      width: 150px;
+      height: auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--accent-strong);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0 0 12px;
+      font-size: clamp(2.2rem, 5vw, 4.8rem);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.35rem;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .summary-panel,
+    .card,
+    .setup-section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-glass);
+      box-shadow: var(--shadow);
+    }
+
+    .summary-panel {
+      padding: 18px;
+    }
+
+    .setup-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .setup-list li {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+    }
+
+    .setup-list span {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 800;
+      font-size: .85rem;
+    }
+
+    .card {
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .token-card {
+      max-width: 640px;
+    }
+
+    .form-row,
+    .admin-row,
+    .url-grid,
+    .db-grid,
+    .cloud-fields {
+      display: grid;
+      gap: 12px;
+    }
+
+    .form-row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+    .root-cert-action-row {
+      grid-template-columns: 1fr;
+      padding-top: 12px;
+    }
+    .root-cert-action-row button { width: 100%; }
+    .admin-row { grid-template-columns: minmax(120px, .8fr) minmax(190px, 1fr) minmax(220px, 1.25fr); }
+    .url-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .db-grid { grid-template-columns: 1.5fr .5fr 1fr 1fr 1fr auto; align-items: end; margin-top: 12px; }
+    .cloud-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }
+
+    .optional-admin-toggle {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 12px 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      padding: 11px 12px;
+    }
+
+    .optional-admin-toggle input {
+      width: auto;
+      margin-top: 4px;
+      accent-color: var(--accent);
+    }
+
+    .optional-admin-toggle strong,
+    .optional-admin-toggle small { display: block; }
+
+    .setup-section {
+      margin: 0 0 18px;
+      padding: 18px;
+    }
+
+    .setup-section.issuer-foundation-locked {
+      position: relative;
+    }
+
+    .setup-section.issuer-foundation-locked::after {
+      position: absolute;
+      z-index: 20;
+      top: 12px;
+      right: 14px;
+      max-width: min(360px, calc(100% - 28px));
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--ink);
+      color: var(--surface);
+      content: attr(data-lock-hint);
+      font-size: .78rem;
+      font-weight: 600;
+      line-height: 1.3;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity .15s ease, transform .15s ease;
+    }
+
+    .setup-section.issuer-foundation-locked:hover::after,
+    .setup-section.issuer-foundation-locked:focus-within::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .issuer-reset-panel {
+      margin-top: 18px;
+      padding: 0 16px 16px;
+      border: 1px solid color-mix(in srgb, var(--warn) 55%, var(--line));
+      border-left: 4px solid var(--warn);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--warn) 7%, var(--panel));
+    }
+
+    .issuer-reset-panel > summary {
+      display: grid;
+      gap: 3px;
+      margin: 0 -16px 12px;
+      padding: 14px 16px;
+      color: var(--ink);
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .issuer-reset-panel > summary span {
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight: 600;
+    }
+
+    .issuer-reset-panel > button {
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .direct-https-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .direct-https-toggle input {
+      width: auto;
+      margin: 0;
+    }
+
+    .direct-https-toggle small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+    }
+
+    .cloud-provider-option {
+      min-width: 0;
+    }
+
+    .cloud-provider-option > .choice-card {
+      width: 100%;
+    }
+
+    .cloud-provider-helper {
+      margin: 8px 0 0;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+    }
+
+    .cloud-provider-helper[open] {
+      color: var(--ink);
+    }
+
+    .cloud-provider-helper ol,
+    .cloud-provider-helper ul {
+      margin: 8px 0 0;
+      padding-left: 1.3rem;
+    }
+
+    .cloud-provider-helper li + li {
+      margin-top: 5px;
+    }
+
+    .cloud-provider-helper pre {
+      margin: 12px 0;
+      padding: 12px 14px;
+      max-height: 320px;
+      overflow: auto;
+      overflow-wrap: anywhere;
+      font-size: .78rem;
+      white-space: pre-wrap;
+    }
+
+    .cloud-provider-helper button {
+      margin-bottom: 12px;
+    }
+
+    #issuer-mode-actions button {
+      min-width: 0;
+      white-space: normal;
+    }
+
+    #issuer-mode-actions #issuer-lab-mode {
+      grid-column: 1 / -1;
+    }
+
+    #issuer-lab-panel > button {
+      margin-top: 12px;
+    }
+
+    .issuer-action-row,
+    .issuer-action-button {
+      margin-top: 12px;
+    }
+
+    .issuer-key-source {
+      margin: 0 0 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+    }
+
+    .issuer-file-source-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .issuer-file-source {
+      align-content: start;
+      min-width: 0;
+      margin: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .issuer-file-source textarea {
+      min-height: 150px;
+    }
+
+    .issuer-key-details {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0 0;
+    }
+
+    .issuer-key-details div {
+      min-width: 0;
+      padding: 9px 10px;
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .issuer-key-details dt {
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 700;
+    }
+
+    .issuer-key-details dd {
+      margin: 2px 0 0;
+      overflow-wrap: anywhere;
+      font-weight: 700;
+    }
+
+    .pkcs11-fields {
+      display: grid;
+      gap: 18px;
+      margin-top: 12px;
+    }
+
+    .pkcs11-config-grid {
+      margin-top: 0;
+    }
+
+    .pkcs11-probe-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .pkcs11-mode-section {
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .pkcs11-mode-section h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .pkcs11-mode-grid {
+      margin-top: 12px;
+    }
+
+    .pkcs11-mode-card {
+      min-height: 96px;
+    }
+
+    .pkcs11-dkek-choice-grid {
+      align-items: stretch;
+    }
+
+    .pkcs11-dkek-count-field {
+      align-content: center;
+      min-height: 74px;
+      margin: 0;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .pkcs11-dkek-warning {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .pkcs11-share-warning {
+      margin: 0;
+      padding: 12px 14px;
+      border: 1px solid color-mix(in srgb, var(--warn) 55%, var(--line));
+      border-left: 4px solid var(--warn);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--warn) 7%, var(--surface));
+      color: var(--ink);
+      font-size: .92rem;
+      font-weight: 700;
+    }
+
+    .pkcs11-share-rows {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pkcs11-share-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    #pkcs11-existing-actions,
+    #pkcs11-initialize-fields,
+    #pkcs11-new-share-fields,
+    #pkcs11-import-fields {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    #pkcs11-existing-actions button,
+    #pkcs11-initialize-fields button,
+    #pkcs11-new-share-fields button,
+    #pkcs11-import-fields button {
+      justify-self: start;
+    }
+
+    .pkcs11-step {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+    }
+
+    .pkcs11-step-danger {
+      border-color: color-mix(in srgb, var(--warn) 55%, var(--line));
+      background: color-mix(in srgb, var(--warn) 6%, var(--surface-soft));
+    }
+
+    .pkcs11-step + .pkcs11-step {
+      margin-top: 16px;
+    }
+
+    .pkcs11-step-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .pkcs11-step-heading h4 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 1rem;
+    }
+
+    .pkcs11-step-number {
+      color: var(--accent-strong);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .choice-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+      min-height: 74px;
+      margin: 0;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .listener-exposure-warning {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--line));
+      border-left: 4px solid var(--danger);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--danger) 7%, var(--surface));
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    .choice-card:has(input:disabled) {
+      position: relative;
+      cursor: not-allowed;
+      opacity: .48;
+    }
+
+    [data-production-only].production-only-disabled {
+      position: relative;
+      cursor: not-allowed;
+      opacity: .48;
+    }
+
+    [data-production-only].production-only-disabled:hover::after,
+    .choice-card:has(input:disabled):hover::after {
+      position: absolute;
+      z-index: 20;
+      top: calc(100% + 8px);
+      left: 50%;
+      width: max-content;
+      max-width: 260px;
+      padding: 7px 9px;
+      border-radius: 6px;
+      background: var(--ink);
+      color: var(--surface);
+      content: "Available for Production setup only.";
+      font-size: .78rem;
+      font-weight: 600;
+      line-height: 1.3;
+      pointer-events: none;
+      transform: translateX(-50%);
+    }
+
+    .choice-card input {
+      width: auto;
+      margin-top: 4px;
+      accent-color: var(--accent);
+    }
+
+    .choice-card strong { display: block; }
+    .choice-card small { color: var(--muted); }
+    .choice-card:has(input:checked) {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+
+    .choice-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .choice-tag {
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-size: .72rem;
+      font-weight: 800;
+      padding: 2px 7px;
+    }
+
+    .governance-guidance {
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--ink);
+      margin: 14px 0 0;
+      padding: 10px 12px;
+    }
+
+    .governance-guidance.is-risk {
+      border-left-color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+      padding: 11px 12px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus,
+    button:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+      border-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      padding: 10px 16px;
+      white-space: nowrap;
+    }
+
+    button:hover { background: var(--accent-strong); }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+
+    .danger-button {
+      border-color: var(--danger);
+      background: var(--danger);
+    }
+
+    .danger-button:hover {
+      border-color: color-mix(in srgb, var(--danger) 78%, black);
+      background: color-mix(in srgb, var(--danger) 78%, black);
+    }
+
+    .warning-button {
+      border-color: #b8860b;
+      background: #d6a617;
+      color: var(--ink);
+    }
+
+    .warning-button:hover {
+      border-color: #8f6a08;
+      background: #b8860b;
+    }
+
+    .secondary-button {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .secondary-button:hover {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    pre {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--code-inverse-bg);
+      color: var(--code-inverse-ink);
+      padding: 14px;
+      overflow: auto;
+      font-size: .86rem;
+    }
+
+    .preflight-card {
+      background: var(--panel-soft);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: .92rem;
+      margin: .25rem 0 .5rem;
+    }
+
+    .pkcs11-import-share-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
+      margin: 8px 0;
+    }
+
+    .pkcs11-import-share-row input[readonly] {
+      background: var(--panel-soft);
+    }
+
+    .status-message {
+      margin: 10px 0 12px;
+      border: 1px solid var(--line);
+      border-left-width: 4px;
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: .92rem;
+      font-weight: 700;
+      padding: 10px 12px;
+    }
+
+    .status-neutral {
+      border-left-color: var(--accent);
+    }
+
+    .status-pending {
+      border-left-color: var(--warn);
+      background: color-mix(in srgb, var(--warn) 7%, var(--surface));
+    }
+
+    .status-success {
+      border-left-color: var(--ok);
+      background: color-mix(in srgb, var(--ok) 7%, var(--surface));
+    }
+
+    .status-error {
+      border-left-color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+    }
+
+    .field-note {
+      color: var(--muted);
+      font-size: .85rem;
+      margin: 3px 0 0;
+    }
+
+    .command-helper {
+      padding: 0;
+    }
+
+    .command-helper pre {
+      margin: 12px 0;
+      padding: 12px 14px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .command-helper button {
+      margin-bottom: 12px;
+    }
+
+    details {
+      margin: .35rem 0 .7rem;
+      color: var(--muted);
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    details p {
+      margin: .45rem 0 0;
+      max-width: 820px;
+    }
+
+    .actions-bar {
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-glass-strong);
+      box-shadow: var(--shadow-bottom-bar);
+      backdrop-filter: blur(10px);
+    }
+
+    #unlock-error {
+      color: var(--danger);
+      min-height: 1.5em;
+      margin: 10px 0 0;
+    }
+
+    #db-status,
+    #wizard-status {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    #completion-panel {
+      scroll-margin: 24px;
+    }
+
+    #completion-output pre {
+      margin-top: 10px;
+      background: var(--surface-soft);
+      color: var(--ink);
+    }
+
+    #issuer-analysis-output {
+      margin-top: 18px;
+    }
+
+    .setup-footer {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .78rem;
+      text-align: center;
+    }
+
+    .setup-footer p { margin: 0; }
+
+    ol.next-steps {
+      line-height: 1.55;
+      padding-left: 1.35rem;
+    }
+
+    @media (max-width: 880px) {
+      .setup-hero,
+      .form-row,
+      .admin-row,
+      .url-grid,
+      .db-grid,
+      .cloud-fields,
+      .issuer-file-source-grid,
+      .pkcs11-probe-row,
+      .pkcs11-share-row,
+      .issuer-key-details {
+        grid-template-columns: 1fr;
+      }
+
+      .setup-shell {
+        width: min(100% - 24px, 680px);
+        padding-top: 22px;
+      }
+
+      .actions-bar {
+        position: static;
+      }
+
+      .actions-bar > label {
+        flex: 1 1 280px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="setup-shell">
+    <header class="setup-hero">
+      <div>
+        <div class="brand-row">
+          <img class="brand-logo brand-logo-hero" src="/branding/logo" alt="myOwnCA logo">
+          <div>
+            <p class="eyebrow">One-time setup</p>
+            <strong>myOwnCA</strong>
+          </div>
+        </div>
+        <h1>Set up your private certificate authority.</h1>
+        <p class="intro">
+          This wizard captures the first configuration myOwnCA needs before it starts:
+          deployment type, administrative governance, storage, public service URLs,
+          certificate endpoints, your trust anchor, and the initial admin accounts.
+        </p>
+      </div>
+      <aside class="summary-panel" aria-label="Setup overview">
+        <ol class="setup-list">
+          <li><span>1</span><div><strong>Unlock setup</strong><br>Use the one-time token from the console.</div></li>
+          <li><span>2</span><div><strong>Choose deployment &amp; governance</strong><br>Lab starts quickly; Production recommends two-admin approval.</div></li>
+          <li><span>3</span><div><strong>Finish once</strong><br>The service starts with these values and setup closes.</div></li>
+        </ol>
+      </aside>
+    </header>
+
+    <section id="unlock-panel" class="card token-card">
+      <h2>Unlock setup</h2>
+      <p class="hint">Paste the one-time setup token printed in the console.</p>
+      <div class="form-row">
+        <input id="token-input" type="password" autocomplete="off" size="44" aria-label="One-time setup token" />
+        <button id="unlock-button">Unlock</button>
+      </div>
+      <p id="unlock-error"></p>
+    </section>
+
+    <section id="wizard-panel" class="hidden">
+      <section class="card preflight-card">
+        <h2>Preflight</h2>
+        <p class="hint">Environment checks from the setup host. These are useful when something refuses to start later.</p>
+        <pre id="preflight-output">…</pre>
+      </section>
+
+    <section id="install-type-fieldset" class="setup-section">
+      <h2 class="section-title">Install type</h2>
+      <p class="hint">Pick Test/Lab to evaluate, Production for real use.</p>
+      <details><summary>Learn more</summary>
+        <p>Test/Lab — for evaluation: a throwaway CA can be auto-generated and a one-click
+        issuer is available; not for certificates anyone should trust. Production — for
+        real use: you import your own offline-generated root (below) and the full
+        issuing-CA ceremony applies.</p>
+      </details>
+      <div class="choice-grid">
+        <label class="choice-card"><input type="radio" name="install-type" value="lab" /> <span><strong>Test / Lab</strong><small>Fast evaluation with a throwaway CA.</small></span></label>
+        <label class="choice-card"><input type="radio" name="install-type" value="production" /> <span><strong>Production</strong><small>Use your offline root and ceremony flow.</small></span></label>
+      </div>
+    </section>
+
+    <section id="root-certificate-fieldset" class="setup-section hidden">
+      <h2 class="section-title">Root CA certificate import</h2>
+      <p class="hint">Paste your offline-generated root cert for Production.</p>
+      <details><summary>Learn more</summary>
+        <p>Your trust anchor. In Production you generate the root offline (air-gapped) and
+        import only its certificate here — the root private key never touches this server.
+        In Test/Lab, leave blank and a throwaway CA is created.</p>
+      </details>
+      <details class="command-helper">
+        <summary>OpenSSL helpers — run these on the offline Root CA machine</summary>
+        <p>Keep <code>root-ca.key</code> offline. Only paste the resulting
+        <code>root-ca.crt</code> into this setup wizard.</p>
+        <p><strong>1. Generate an encrypted RSA Root CA key</strong></p>
+        <pre id="root-key-command">openssl genpkey \
+  -algorithm RSA \
+  -aes-256-cbc \
+  -pkeyopt rsa_keygen_bits:4096 \
+  -out root-ca.key</pre>
+        <button type="button" class="secondary-button" data-copy-command="root-key-command">Copy key command</button>
+        <p><strong>2. Create the self-signed Root CA certificate</strong></p>
+        <pre id="root-cert-command">openssl req -new -x509 \
+  -key root-ca.key \
+  -sha256 -days 3650 \
+  -out root-ca.crt \
+  -subj "/C=PL/O=Example Organization/CN=Example Root CA" \
+  -addext "basicConstraints=critical,CA:TRUE,pathlen:1" \
+  -addext "keyUsage=critical,keyCertSign,cRLSign" \
+  -addext "subjectKeyIdentifier=hash" \
+  -addext "authorityKeyIdentifier=keyid:always,issuer"</pre>
+        <button type="button" class="secondary-button" data-copy-command="root-cert-command">Copy certificate command</button>
+      </details>
+      <label>Root CA certificate file (optional for Lab)<input id="root-cert-file" type="file" accept=".pem,.crt,.cer"></label>
+      <label>Or paste the Root CA certificate PEM
+        <textarea id="root-cert-input" rows="6" cols="64"
+          placeholder="-----BEGIN CERTIFICATE-----  (leave blank for lab installs)"></textarea>
+      </label>
+      <div class="form-row root-cert-action-row">
+        <button id="root-cert-verify" type="button">Verify</button>
+      </div>
+      <p id="root-cert-verify-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+      <pre id="root-cert-verify-summary" class="hidden"></pre>
+    </section>
+
+    <section id="database-fieldset" class="setup-section">
+      <h2 class="section-title">Database</h2>
+      <p class="hint">SQLite (one file) suits small/single-host installs; MariaDB for larger or shared setups.</p>
+      <details><summary>Learn more</summary>
+        <p>Where myOwnCA stores its data. SQLite is a single file on this host — simplest,
+        fine for most. Choose MariaDB to point at a shared/managed database (host, port,
+        name, user, password; use <strong>Test connection</strong> to verify).</p>
+      </details>
+      <div class="choice-grid">
+        <label class="choice-card"><input type="radio" name="db-kind" value="sqlite" checked /> <span><strong>SQLite</strong><small>Single file, easiest for small installs.</small></span></label>
+        <label class="choice-card"><input type="radio" name="db-kind" value="mariadb" /> <span><strong>MariaDB</strong><small>Use a shared or managed database.</small></span></label>
+      </div>
+      <div id="mariadb-fields" class="db-grid hidden">
+        <input id="db-host" placeholder="host" />
+        <input id="db-port" placeholder="port" value="3306" size="6" />
+        <input id="db-name" placeholder="database" />
+        <input id="db-user" placeholder="user" />
+        <input id="db-password" type="password" placeholder="password" />
+        <button id="db-test-button" type="button" class="secondary-button">Test connection</button>
+      </div>
+      <p id="db-status"></p>
+    </section>
+
+
+    <section id="hsm-fieldset" class="setup-section">
+      <h2 class="section-title">Issuing Sub CA key storage</h2>
+      <p class="hint">This choice applies only to the Issuing Sub CA signing key. Leaf certificates are not stored in HSM or cloud: with a user-provided CSR, the private key stays with the requester; server-generated leaf keys are kept encrypted locally.</p>
+      <details><summary>Learn more</summary>
+        <p>The Issuing Sub CA signs the leaf certificates, but its private key is kept separately
+        from all leaf private keys. Choose local storage for an offline installation, or a cloud
+        provider for a non-exportable Sub CA key. The PKCS#11 User PIN is never saved; admins
+        unlock the token from the portal when needed.</p>
+      </details>
+      <p class="hint"><strong>Where should the Sub CA key be stored?</strong></p>
+      <div class="choice-grid">
+        <label class="choice-card"><input type="radio" name="key-storage-location" value="local" checked /> <span><strong>Local storage</strong><small>Works fully offline. Choose encrypted software storage or a local PKCS#11 token.</small></span></label>
+        <label class="choice-card" data-production-only title="Available for Production setup only."><input type="radio" name="key-storage-location" value="cloud" /> <span><strong>Cloud storage</strong><small>Choose AWS KMS or Azure Key Vault. Requires provider access and network connectivity.</small></span></label>
+      </div>
+      <p id="hsm-local-status" class="status-message status-neutral" role="status" aria-live="polite">Local software mode needs no AWS or Azure configuration.</p>
+      <div id="local-key-options" class="choice-grid">
+        <label class="choice-card"><input type="radio" name="local-hsm-backend" value="software" checked /> <span><span class="choice-heading"><strong>Software keys</strong><span class="choice-tag">Default</span></span><small>Encrypted key files on this host; no cloud dependency.</small></span></label>
+        <label class="choice-card" data-production-only title="Available for Production setup only."><input type="radio" name="local-hsm-backend" value="pkcs11" /> <span><strong>Smartcard / HSM</strong><small>PKCS#11 token through OpenSC. The User PIN is never saved.</small></span></label>
+      </div>
+      <div id="cloud-key-options" class="choice-grid hidden">
+        <div class="cloud-provider-option">
+          <label class="choice-card" data-production-only title="Available for Production setup only."><input type="radio" name="cloud-hsm-backend" value="aws_kms" /> <span><strong>AWS KMS</strong><small>Non-exportable Issuing Sub CA key in AWS.</small></span></label>
+          <details id="aws-kms-helper" class="cloud-provider-helper">
+            <summary>AWS identity and policy helper</summary>
+            <p>Create a dedicated IAM identity with an access key, then replace
+            <code>YOUR_REGION</code> and <code>YOUR_ACCOUNT_ID</code> in the bootstrap
+            policy. Use the same region in the form below.</p>
+            <p><strong>Policy while myOwnCA creates and manages signing keys</strong></p>
+            <pre id="aws-kms-bootstrap-policy">{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowListingKmsKeys",
+      "Effect": "Allow",
+      "Action": "kms:ListKeys",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowCreatingTaggedKmsKeys",
+      "Effect": "Allow",
+      "Action": [
+        "kms:CreateKey",
+        "kms:TagResource"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/myownca:managed": "true"
+        },
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "myownca:managed",
+            "myownca:label"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowManagedKmsKeyUseAndLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "kms:DescribeKey",
+        "kms:GetPublicKey",
+        "kms:Sign",
+        "kms:ScheduleKeyDeletion",
+        "kms:CancelKeyDeletion",
+        "kms:EnableKey"
+      ],
+      "Resource": "arn:aws:kms:YOUR_REGION:YOUR_ACCOUNT_ID:key/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/myownca:managed": "true"
+        }
+      }
+    }
+  ]
+}</pre>
+            <button type="button" class="secondary-button"
+              data-copy-command="aws-kms-bootstrap-policy"
+              data-copy-success="Policy copied">Copy bootstrap policy</button>
+            <p><strong>Optional: restrict access after all keys are created</strong></p>
+            <p>Replace <code>KEY_ID</code> with the key ID. This policy prevents myOwnCA
+            from creating additional cloud keys until the bootstrap permissions are restored.</p>
+            <pre id="aws-kms-runtime-policy">{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowListingKmsKeys",
+      "Effect": "Allow",
+      "Action": "kms:ListKeys",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowUseOfSpecificKmsKey",
+      "Effect": "Allow",
+      "Action": [
+        "kms:DescribeKey",
+        "kms:GetPublicKey",
+        "kms:Sign",
+        "kms:ScheduleKeyDeletion",
+        "kms:CancelKeyDeletion",
+        "kms:EnableKey"
+      ],
+      "Resource": "arn:aws:kms:YOUR_REGION:YOUR_ACCOUNT_ID:key/KEY_ID"
+    }
+  ]
+}</pre>
+            <button type="button" class="secondary-button"
+              data-copy-command="aws-kms-runtime-policy"
+              data-copy-success="Policy copied">Copy restricted policy</button>
+          </details>
+        </div>
+        <div class="cloud-provider-option">
+          <label class="choice-card" data-production-only title="Available for Production setup only."><input type="radio" name="cloud-hsm-backend" value="azure_key_vault" /> <span><strong>Azure Key Vault</strong><small>Non-exportable Issuing Sub CA key in Azure.</small></span></label>
+          <details id="azure-key-vault-helper" class="cloud-provider-helper">
+            <summary>Azure identity and access helper</summary>
+            <ol>
+              <li>Create a resource group if you do not already have one.</li>
+              <li>Create a Key Vault using the Azure RBAC permission model. Ensure this
+              host can reach its data-plane endpoint, then copy the Vault URI.</li>
+              <li>In Microsoft Entra ID, create an app registration with the default
+              settings. Copy its Application (client) ID and Directory (tenant) ID.</li>
+              <li>Create a client secret and copy the secret <strong>Value</strong>
+              immediately; do not copy its secret ID.</li>
+              <li>In the vault, open <strong>Access control (IAM)</strong> and add the
+              <strong>Key Vault Crypto Officer</strong> role at vault scope.</li>
+              <li>Under <strong>Members</strong>, choose
+              <strong>User, group, or service principal</strong>, select the app
+              registration, then choose <strong>Review + assign</strong>.</li>
+            </ol>
+            <p>Use a Premium Key Vault when selecting HSM-protected keys below. Do not
+            grant myOwnCA access to vault secrets or certificates.</p>
+          </details>
+        </div>
+      </div>
+      <p id="hsm-cloud-status" class="hint"></p>
+      <div id="pkcs11-fields" class="pkcs11-fields hidden">
+        <div class="url-grid pkcs11-config-grid">
+          <label>PKCS#11 module<input id="pkcs11-lib" placeholder="OpenSC PKCS#11 module path" value="" size="64" /></label>
+          <label>Token label<input id="pkcs11-token-label" placeholder="token label" size="24" value="myOwnCA" /></label>
+          <label>OpenSC reader index (optional)<input id="pkcs11-reader" placeholder="for example 0" size="32" /></label>
+        </div>
+        <div class="pkcs11-probe-row">
+          <label>User PIN (optional; required to list private keys)
+            <input id="pkcs11-probe-pin" type="password" autocomplete="off">
+          </label>
+          <button id="pkcs11-probe-button" type="button" class="secondary-button">Probe local token</button>
+        </div>
+        <p id="pkcs11-probe-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+        <div class="pkcs11-mode-section">
+          <h3>Setup mode</h3>
+          <p class="hint">Choose how this Smartcard / HSM will be prepared. The detailed parameters appear below.</p>
+          <div class="choice-grid pkcs11-mode-grid">
+            <label class="choice-card pkcs11-mode-card"><input type="radio" name="pkcs11-setup-mode" value="new" /> <span><strong>New HSM</strong><small>Initialize a token and choose whether to create DKEK shares for future recovery or migration.</small></span></label>
+            <label class="choice-card pkcs11-mode-card"><input type="radio" name="pkcs11-setup-mode" value="existing" checked /> <span><strong>Existing prepared HSM</strong><small>Adopt a prepared token and use its existing keys.</small></span></label>
+            <label class="choice-card pkcs11-mode-card"><input type="radio" name="pkcs11-setup-mode" value="recovery" /> <span><strong>Recover HSM from existing DKEKs</strong><small>Import existing DKEK shares and verify the recovered token.</small></span></label>
+          </div>
+        </div>
+        <div id="pkcs11-dkek-choice" class="pkcs11-mode-section hidden">
+          <h3>Future HSM migration</h3>
+          <p class="hint">Do you want to create DKEK shares so the Issuing Sub CA key can be recovered or migrated to another HSM?</p>
+          <div class="choice-grid pkcs11-dkek-choice-grid">
+            <label class="choice-card"><input type="radio" name="pkcs11-dkek-migration" value="shares" checked /> <span><span class="choice-heading"><strong>Yes — create DKEK shares</strong><span class="choice-tag">Recommended</span></span><small>Keep the option to recover or migrate the Sub CA key in the future.</small></span></label>
+            <label id="pkcs11-new-dkek-count-field" class="pkcs11-dkek-count-field">Number of DKEK shares (N-of-N)<input id="pkcs11-new-dkek-count" type="number" min="1" max="255" step="any" value="2" required></label>
+            <label class="choice-card"><input type="radio" name="pkcs11-dkek-migration" value="disabled" /> <span><strong>No — permanently disable migration</strong><small class="pkcs11-dkek-warning">This Sub CA key can never be wrapped, recovered, or moved to another HSM. Recovery requires replacing the Sub CA.</small></span></label>
+          </div>
+        </div>
+        <div id="pkcs11-existing-actions">
+          <label>User PIN for adoption
+            <input id="pkcs11-adopt-pin" type="password" autocomplete="off">
+          </label>
+          <button id="pkcs11-adopt-button" type="button">Adopt existing HSM</button>
+          <p id="pkcs11-adopt-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+        </div>
+        <section id="pkcs11-new-share-step" class="pkcs11-step hidden">
+          <div class="pkcs11-step-heading">
+            <span class="pkcs11-step-number">Step 1 of 3</span>
+            <h4>DKEK shares creation</h4>
+          </div>
+          <div id="pkcs11-new-share-fields">
+            <p class="hint">Provide a unique filename and password for every share, then generate the complete N-of-N set in one temporary ZIP archive.</p>
+            <p class="pkcs11-share-warning"><strong>Do not keep these shares together.</strong> Extract the ZIP immediately, distribute each share to a different custodian or location, keep redundant offline copies, and store every password separately from its share. Delete the combined ZIP after distribution.</p>
+            <div id="pkcs11-share-rows" class="pkcs11-share-rows"></div>
+            <button id="pkcs11-share-create-button" type="button" class="secondary-button">Generate and download all 2 shares</button>
+            <p id="pkcs11-share-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+        <section id="pkcs11-initialize-step" class="pkcs11-step pkcs11-step-danger hidden">
+          <div class="pkcs11-step-heading">
+            <span id="pkcs11-initialize-step-number" class="pkcs11-step-number">Step 2 of 3</span>
+            <h4>HSM initialization — erasing data</h4>
+          </div>
+          <div id="pkcs11-initialize-fields">
+            <label>Current User PIN (only if target is already initialized)
+              <input id="pkcs11-current-pin" type="password" autocomplete="off"
+                inputmode="numeric" pattern="[0-9]{6,15}" minlength="6" maxlength="15"
+                title="Use the current 6 to 15 digit SmartCard-HSM User PIN">
+            </label>
+            <label>SO-PIN<input id="pkcs11-so-pin" type="password" autocomplete="off"
+              pattern="[0-9A-Fa-f]{16}" minlength="16" maxlength="16" required
+              title="Use exactly 16 hexadecimal characters"></label>
+            <label>New User PIN<input id="pkcs11-new-pin" type="password" autocomplete="off"
+              inputmode="numeric" pattern="[0-9]{6,15}" minlength="6" maxlength="15" required
+              title="Use 6 to 15 digits"></label>
+            <label id="pkcs11-recovery-dkek-count-field" class="hidden">Number of existing DKEK shares (N-of-N)<input id="pkcs11-recovery-dkek-count"
+              type="number" min="1" max="255" step="any" value="2" required disabled></label>
+            <label>Reason<input id="pkcs11-init-reason"
+              value="Initialize a dedicated SmartCard-HSM for Issuing CA recovery"
+              minlength="10" maxlength="500" required></label>
+            <label>Confirmation<input id="pkcs11-init-confirmation"
+              placeholder="INITIALIZE HSM" autocomplete="off"
+              pattern="INITIALIZE HSM" required
+              title="Type INITIALIZE HSM exactly"></label>
+            <button id="pkcs11-initialize-button" type="button">Initialize HSM</button>
+            <p id="pkcs11-initialize-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+        <section id="pkcs11-import-step" class="pkcs11-step hidden">
+          <div class="pkcs11-step-heading">
+            <span id="pkcs11-import-step-number" class="pkcs11-step-number">Step 3 of 3</span>
+            <h4>DKEKs import for wrapping key backup</h4>
+          </div>
+          <div id="pkcs11-import-fields">
+            <label>All N DKEK shares<input id="pkcs11-import-shares" type="file" accept=".pbe" multiple></label>
+            <p class="hint">Enter the password for each selected share:</p>
+            <div id="pkcs11-import-share-rows"></div>
+            <label>User PIN<input id="pkcs11-import-pin" type="password" autocomplete="off"></label>
+            <button id="pkcs11-import-button" type="button">Import all shares and verify KCV</button>
+            <p id="pkcs11-import-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+            <p class="hint"><strong>Native HSM backups can be created later.</strong> After setup, export native SmartCard-HSM <code>.bin</code> backups in the Admin portal: Security → HSM &amp; Keys → Export native HSM backups.</p>
+          </div>
+        </section>
+      </div>
+      <div id="aws-kms-fields" class="cloud-fields hidden">
+        <label>AWS region<input id="aws-region" placeholder="e.g. eu-central-1" autocomplete="off" /></label>
+        <label>AWS access key ID<input id="aws-access-key-id" placeholder="access key ID" autocomplete="off" /></label>
+        <label>AWS secret access key<input id="aws-secret-access-key" type="password" placeholder="secret access key" autocomplete="new-password" /></label>
+        <label>Session token (optional)<input id="aws-session-token" type="password" placeholder="temporary credential session token" autocomplete="new-password" /></label>
+      </div>
+      <div id="azure-key-vault-fields" class="cloud-fields hidden">
+        <label>Vault URL<input id="azure-vault-url" type="url" placeholder="https://name.vault.azure.net" autocomplete="off" /></label>
+        <label>Tenant ID<input id="azure-tenant-id" placeholder="Microsoft Entra tenant ID" autocomplete="off" /></label>
+        <label>Client ID<input id="azure-client-id" placeholder="application client ID" autocomplete="off" /></label>
+        <label>Client secret<input id="azure-client-secret" type="password" placeholder="application client secret" autocomplete="new-password" /></label>
+        <label>Default Azure key protection
+          <select id="azure-key-protection">
+            <option value="hsm" selected>HSM-protected</option>
+            <option value="standard">Software-protected</option>
+          </select>
+        </label>
+      </div>
+      <div id="cloud-service-key-options" class="cloud-fields hidden">
+        <label>Default service-certificate key storage
+          <select id="service-key-backend">
+            <option value="software" selected>Local software storage</option>
+            <option id="service-key-cloud-option" value="">Selected cloud provider</option>
+          </select>
+        </label>
+        <div>
+          <button id="hsm-test-button" type="button" class="secondary-button">Check cloud configuration</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="issuer-fieldset" class="setup-section">
+      <h2 class="section-title">Issuing CA / Sub CA</h2>
+      <p class="hint">Provision the only issuing CA before the service starts. Root and Sub CA trust material becomes immutable after setup.</p>
+      <div id="issuer-mode-actions" class="choice-grid">
+        <button id="issuer-lab-mode" type="button" class="secondary-button">Test/Lab — create local CA</button>
+        <button id="issuer-new-mode" type="button" class="secondary-button" data-production-only title="Available for Production setup only.">Create new key + offline ceremony</button>
+        <button id="issuer-existing-mode" type="button" class="secondary-button" data-production-only title="Available for Production setup only.">Import existing Sub CA certificate</button>
+        <button id="issuer-file-mode" type="button" class="secondary-button" data-production-only title="Available for Production setup only.">Import P12 or PEM</button>
+        <button id="issuer-dkek-mode" type="button" class="secondary-button" data-production-only title="Available for Production setup only.">Restore Sub CA key from wrapped backup</button>
+      </div>
+      <p id="issuer-production-root-status" class="status-message status-error hidden" role="status" aria-live="polite"></p>
+
+      <div id="issuer-new-panel" class="hidden">
+        <h3 id="issuer-request-heading">Create a new Sub CA</h3>
+        <div class="url-grid">
+          <label>Common name<input id="issuer-new-cn" value="myOwnCA Online Issuing CA"></label>
+          <label id="issuer-new-algorithm-field">Algorithm<select id="issuer-new-algorithm">
+            <option value="ecdsa-p521" selected>ECDSA P-521</option>
+            <option value="ecdsa-p384">ECDSA P-384</option>
+            <option value="ecdsa-p256">ECDSA P-256</option>
+            <option value="rsa-4096">RSA 4096</option>
+            <option value="rsa-3072">RSA 3072</option>
+            <option value="rsa-2048">RSA 2048</option>
+          </select></label>
+          <label id="issuer-new-pin-field" class="issuer-pkcs11-pin-field">PKCS#11 User PIN<input id="issuer-new-pin" type="password" autocomplete="off"></label>
+        </div>
+        <fieldset class="issuer-profiles"><legend>Allowed leaf profiles</legend>
+          <label><input type="checkbox" value="user_auth" checked> user_auth</label>
+          <label><input type="checkbox" value="host_tls" checked> host_tls</label>
+          <label><input type="checkbox" value="smime" checked> smime</label>
+        </fieldset>
+        <label>Reason<input id="issuer-new-reason" value="Provision the initial issuing Sub CA"></label>
+        <div class="form-row issuer-action-row">
+          <button id="issuer-new-create" type="button">Create request</button>
+          <button id="issuer-request-copy" type="button" class="secondary-button">Copy CSR</button>
+        </div>
+        <p id="issuer-request-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+        <label>Certificate signing request (CSR)
+          <textarea id="issuer-request-csr" rows="12" readonly
+            placeholder="Create the request, then copy this PEM text to the offline Root CA."></textarea>
+        </label>
+        <hr>
+        <p class="hint">Copy the CSR, sign it on the offline Root CA, then paste the resulting Sub CA certificate PEM below.</p>
+        <details class="command-helper">
+          <summary>OpenSSL helper — sign this CSR on the offline Root CA</summary>
+          <p>Use this for a CSR generated by myOwnCA. The <code>-copy_extensions copy</code>
+          option preserves the required Sub CA <code>BasicConstraints</code> and
+          <code>KeyUsage</code>; without it OpenSSL silently drops them.</p>
+          <pre id="issuer-sign-command">openssl x509 -req \
+  -in sub.csr \
+  -CA root-ca.crt \
+  -CAkey root-ca.key \
+  -out subca.crt \
+  -days 1825 -sha256 \
+  -copy_extensions copy</pre>
+          <button type="button" class="secondary-button" data-copy-command="issuer-sign-command">Copy signing command</button>
+        </details>
+        <label>Signed Sub CA certificate file<input id="issuer-response-cert-file" type="file" accept=".pem,.crt,.cer"></label>
+        <label>Or paste the Root-signed Sub CA certificate PEM
+          <textarea id="issuer-response-cert" rows="12"
+            placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
+        </label>
+        <label id="issuer-response-pin-field" class="issuer-pkcs11-pin-field">PKCS#11 User PIN<input id="issuer-response-pin" type="password" autocomplete="off"></label>
+        <label>Reason<input id="issuer-response-reason" value="Activate the Root-signed initial Sub CA"></label>
+        <button id="issuer-response-import" type="button" class="issuer-action-button">Verify and activate certificate</button>
+        <p id="issuer-response-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="issuer-existing-panel" class="hidden">
+        <h3 id="issuer-existing-heading">Import an existing Sub CA certificate and cloud key</h3>
+        <div id="issuer-existing-hsm-fields" class="issuer-key-source hidden">
+          <p class="hint">Enter the HSM User PIN and list the private keys available on the selected token.</p>
+          <div class="form-row issuer-action-row">
+            <label>HSM User PIN<input id="issuer-existing-hsm-pin" type="password" autocomplete="off"></label>
+            <button id="issuer-existing-hsm-list" type="button" class="secondary-button">List HSM keys</button>
+          </div>
+          <p id="issuer-existing-hsm-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+          <label>HSM private key<select id="issuer-existing-hsm-key" required>
+            <option value="">List keys to choose a private key</option>
+          </select></label>
+          <dl id="issuer-existing-hsm-details" class="issuer-key-details hidden" aria-live="polite">
+            <div><dt>Label</dt><dd id="issuer-existing-hsm-label">—</dd></div>
+            <div><dt>Algorithm</dt><dd id="issuer-existing-hsm-algorithm">—</dd></div>
+            <div><dt>Key size</dt><dd id="issuer-existing-hsm-size">—</dd></div>
+            <div><dt>Key reference</dt><dd id="issuer-existing-hsm-ref">—</dd></div>
+          </dl>
+        </div>
+        <div id="issuer-existing-cloud-fields" class="issuer-key-source">
+          <div class="url-grid">
+            <label><span id="issuer-existing-ref-label">AWS KMS key ARN</span><input id="issuer-existing-ref" placeholder="arn:aws:kms:region:account:key/…"></label>
+            <label>Expected algorithm<select id="issuer-existing-algorithm">
+              <option value="ecdsa-p521" selected>ECDSA P-521</option>
+              <option value="ecdsa-p384">ECDSA P-384</option>
+              <option value="ecdsa-p256">ECDSA P-256</option>
+              <option value="rsa-4096">RSA 4096</option>
+              <option value="rsa-3072">RSA 3072</option>
+              <option value="rsa-2048">RSA 2048</option>
+            </select></label>
+          </div>
+        </div>
+        <label>Sub CA certificate file<input id="issuer-existing-cert-file" type="file" accept=".pem,.crt,.cer"></label>
+        <label>Or paste the Sub CA certificate PEM
+          <textarea id="issuer-existing-cert" rows="12"
+            placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
+        </label>
+        <fieldset class="issuer-profiles"><legend>Allowed leaf profiles</legend>
+          <label><input type="checkbox" value="user_auth" checked> user_auth</label>
+          <label><input type="checkbox" value="host_tls" checked> host_tls</label>
+          <label><input type="checkbox" value="smime" checked> smime</label>
+        </fieldset>
+        <fieldset><legend>CRL migration</legend>
+          <p class="hint">Provide the latest complete CRL, or select that this authority never issued one.</p>
+          <label>Previous CRL state<select id="issuer-existing-crl-state">
+            <option value="crl" selected>Latest complete CRL available</option>
+            <option value="never_issued_crl">This authority never issued a CRL</option>
+          </select></label>
+          <label id="issuer-existing-crl-file-field">Latest complete CRL file (PEM or DER)<input id="issuer-existing-crl-file" type="file" accept=".crl,.pem,.der,application/pkix-crl"></label>
+          <label id="issuer-existing-crl-pem-field">Or paste the latest complete CRL PEM
+            <textarea id="issuer-existing-crl-pem" rows="8"
+              placeholder="-----BEGIN X509 CRL-----&#10;...&#10;-----END X509 CRL-----"></textarea>
+          </label>
+        </fieldset>
+        <label>Reason<input id="issuer-existing-reason" value="Adopt the existing initial Sub CA key"></label>
+        <div class="form-row issuer-action-row">
+          <button id="issuer-existing-analyze" type="button" class="secondary-button">Validate import (dry run)</button>
+          <button id="issuer-existing-commit" type="button">Import and activate</button>
+        </div>
+        <p id="issuer-existing-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="issuer-file-panel" class="hidden">
+        <h3>Import a Sub CA certificate and private key</h3>
+        <div class="issuer-file-source-grid">
+          <label class="issuer-file-source">Combined PEM bundle file<input id="issuer-file-bundle" type="file" accept=".p12,.pfx,.pem"></label>
+          <label class="issuer-file-source">Or paste the combined PEM bundle
+            <textarea id="issuer-file-bundle-pem" rows="8"
+              placeholder="Paste the combined certificate and private-key PEM bundle"></textarea>
+          </label>
+          <label class="issuer-file-source">Separate private-key PEM (optional)<input id="issuer-file-key" type="file" accept=".pem,.key"></label>
+        </div>
+        <div class="url-grid issuer-file-options">
+          <label>Destination key label<input id="issuer-file-label" value="online-issuer-imported"></label>
+          <label>P12/PEM password<input id="issuer-file-password" type="password" autocomplete="off"></label>
+          <label id="issuer-file-pin-field" class="issuer-pkcs11-pin-field">PKCS#11 User PIN<input id="issuer-file-pin" type="password" autocomplete="off"></label>
+        </div>
+        <fieldset class="issuer-profiles"><legend>Allowed leaf profiles</legend>
+          <label><input type="checkbox" value="user_auth" checked> user_auth</label>
+          <label><input type="checkbox" value="host_tls" checked> host_tls</label>
+          <label><input type="checkbox" value="smime" checked> smime</label>
+        </fieldset>
+        <fieldset><legend>CRL migration</legend>
+          <p class="hint">Provide the latest complete CRL, or select that this authority never issued one.</p>
+          <label>Previous CRL state<select id="issuer-file-crl-state">
+            <option value="crl" selected>Latest complete CRL available</option>
+            <option value="never_issued_crl">This authority never issued a CRL</option>
+          </select></label>
+          <label id="issuer-file-crl-file-field">Latest complete CRL file (PEM or DER)<input id="issuer-file-crl-file" type="file" accept=".crl,.pem,.der,application/pkix-crl"></label>
+          <label id="issuer-file-crl-pem-field">Or paste the latest complete CRL PEM
+            <textarea id="issuer-file-crl-pem" rows="8"
+              placeholder="-----BEGIN X509 CRL-----&#10;...&#10;-----END X509 CRL-----"></textarea>
+          </label>
+        </fieldset>
+        <label>Reason<input id="issuer-file-reason" value="Import the initial Sub CA key material"></label>
+        <div class="form-row issuer-action-row">
+          <button id="issuer-file-analyze" type="button" class="secondary-button">Validate bundle (dry run)</button>
+          <button id="issuer-file-commit" type="button">Import and activate</button>
+        </div>
+        <p id="issuer-file-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="issuer-dkek-panel" class="hidden">
+        <h3>Restore Sub CA key from wrapped backup</h3>
+        <div class="url-grid">
+          <label>Wrapped-key bundle<input id="issuer-dkek-wrapped" type="file"></label>
+          <label>Key reference (1–255)<input id="issuer-dkek-reference" type="number" min="1" max="255" value="1"></label>
+          <label>PKCS#11 User PIN<input id="issuer-dkek-pin" type="password" autocomplete="off"></label>
+          <label>Sub CA certificate file<input id="issuer-dkek-cert-file" type="file" accept=".pem,.crt,.cer"></label>
+        </div>
+        <label>Or paste the Sub CA certificate PEM
+          <textarea id="issuer-dkek-cert" rows="12"
+            placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
+        </label>
+        <fieldset class="issuer-profiles"><legend>Allowed leaf profiles</legend>
+          <label><input type="checkbox" value="user_auth" checked> user_auth</label>
+          <label><input type="checkbox" value="host_tls" checked> host_tls</label>
+          <label><input type="checkbox" value="smime" checked> smime</label>
+        </fieldset>
+        <fieldset><legend>CRL migration</legend>
+          <p class="hint">Provide the latest complete CRL, or select that this authority never issued one.</p>
+          <label>Previous CRL state<select id="issuer-dkek-crl-state">
+            <option value="crl" selected>Latest complete CRL available</option>
+            <option value="never_issued_crl">This authority never issued a CRL</option>
+          </select></label>
+          <label id="issuer-dkek-crl-file-field">Latest complete CRL file (PEM or DER)<input id="issuer-dkek-crl-file" type="file" accept=".crl,.pem,.der,application/pkix-crl"></label>
+          <label id="issuer-dkek-crl-pem-field">Or paste the latest complete CRL PEM
+            <textarea id="issuer-dkek-crl-pem" rows="8"
+              placeholder="-----BEGIN X509 CRL-----&#10;...&#10;-----END X509 CRL-----"></textarea>
+          </label>
+        </fieldset>
+        <label>Reason<input id="issuer-dkek-reason" value="Restore the initial Sub CA from DKEK backup"></label>
+        <div class="form-row issuer-action-row">
+          <button id="issuer-dkek-analyze" type="button" class="secondary-button">Validate recovery (dry run)</button>
+          <button id="issuer-dkek-restore" type="button">Restore and activate</button>
+        </div>
+        <p id="issuer-dkek-status" class="status-message status-neutral hidden" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="issuer-lab-panel" class="hidden">
+        <h3>Create an automatic Test/Lab CA</h3>
+        <p class="hint">Creates and persists a local throwaway Root CA and its active Sub CA. Do not use this path for Production.</p>
+        <label>Reason<input id="issuer-lab-reason" value="Create the initial Test/Lab issuing CA"></label>
+        <button id="issuer-lab-create" type="button">Create and activate Lab CA</button>
+      </div>
+
+      <p id="issuer-setup-status" class="status-message status-neutral" role="status" aria-live="polite">Save the database, HSM and Root CA choices to begin.</p>
+      <pre id="issuer-analysis-output" class="hidden"></pre>
+      <details id="issuer-reset-panel" class="issuer-reset-panel hidden" open>
+        <summary><strong>Optional: Reset issuer setup</strong><span>Only use this to change the current Sub CA setup.</span></summary>
+        <p class="hint"><strong>The Issuing Sub CA is already configured and working.</strong> Do not reset this step unless you intentionally want to change the install type, database, HSM, or Root CA settings. Managed setup keys are deleted; attached external keys are detached and never deleted.</p>
+        <label id="issuer-reset-pin-field" class="hidden">PKCS#11 User PIN<input id="issuer-reset-pin" type="password" autocomplete="off"></label>
+        <label>Reason<input id="issuer-reset-reason" value="Reset the unfinished initial issuer setup"></label>
+        <button id="issuer-reset" type="button" class="warning-button">Reset issuer setup…</button>
+      </details>
+    </section>
+
+    <section id="governance-mode-fieldset" class="setup-section" role="radiogroup" aria-labelledby="governance-mode-title" aria-describedby="governance-mode-intro governance-mode-guidance">
+      <h2 id="governance-mode-title" class="section-title">Administrative governance</h2>
+      <p id="governance-mode-intro" class="hint">Choose who must authorize privileged role grants, privileged password/TOTP resets, and a governance downgrade.</p>
+      <div class="choice-grid">
+        <label class="choice-card">
+          <input type="radio" name="governance-mode" value="dual_control" aria-describedby="governance-mode-guidance" />
+          <span>
+            <span class="choice-heading"><strong>Dual control</strong><span class="choice-tag">Recommended for production</span></span>
+            <small>Governed role grants, privileged password/TOTP resets, and a downgrade are proposed by one administrator and approved by a different administrator.</small>
+          </span>
+        </label>
+        <label class="choice-card">
+          <input type="radio" name="governance-mode" value="single_admin" aria-describedby="governance-mode-guidance" />
+          <span>
+            <span class="choice-heading"><strong>Single administrator</strong><span class="choice-tag">Test/Lab default</span></span>
+            <small>One administrator can apply governed role grants and privileged password/TOTP resets alone. Faster, but without a second-person barrier.</small>
+          </span>
+        </label>
+      </div>
+      <p id="governance-mode-guidance" class="governance-guidance" role="status" aria-live="polite">Choose an install type first.</p>
+    </section>
+
+    <section id="totp-policy-fieldset" class="setup-section" aria-labelledby="totp-policy-title">
+      <h2 id="totp-policy-title" class="section-title">TOTP authentication policy</h2>
+      <p class="hint">Choose which account roles must use an authenticator app after their password. TOTP is recommended for privileged operational roles.</p>
+      <div class="choice-grid">
+        <label class="choice-card">
+          <input type="checkbox" name="totp-role" value="admin" checked data-lab-default="true" />
+          <span><span class="choice-heading"><strong>Administrator</strong><span class="choice-tag">Recommended for production</span></span><small>Protects security policy and system administration.</small></span>
+        </label>
+        <label class="choice-card">
+          <input type="checkbox" name="totp-role" value="superuser" checked data-lab-default="true" />
+          <span><span class="choice-heading"><strong>Certificate Operator</strong><span class="choice-tag">Recommended for production</span></span><small>Protects certificate issuance and lifecycle operations.</small></span>
+        </label>
+        <label class="choice-card">
+          <input type="checkbox" name="totp-role" value="auditor" />
+          <span><strong>Auditor</strong><small>Require TOTP before access to audit evidence.</small></span>
+        </label>
+        <label class="choice-card">
+          <input type="checkbox" name="totp-role" value="user" />
+          <span><strong>User</strong><small>Require TOTP for every certificate requester account.</small></span>
+        </label>
+      </div>
+      <p class="governance-guidance">You can change this later under Admin portal → Security → Authentication. </p>
+    </section>
+
+    <section id="service-urls-fieldset" class="setup-section">
+      <h2 class="section-title">Deployment and service URLs</h2>
+      <p class="hint">Choose the deployment type first, then set the public base URLs for your portals and emailed links.</p>
+      <details><summary>Learn more</summary>
+        <p>The externally-reachable base URLs (typically your https hostname behind the
+        reverse proxy) for the Admin, Certificate Operator, and holder portals. They're used to
+        build sign-in and emailed links so recipients land in the right place.</p>
+      </details>
+      <p class="hint">The deployment type controls the online-service listener. The public URLs below remain editable and do not change that listener choice.</p>
+      <div id="deployment-type-fieldset" class="choice-grid" role="radiogroup" aria-label="Deployment type">
+        <label class="choice-card">
+          <input type="radio" name="deployment-type" value="bare-metal" required />
+          <span><strong>Bare metal</strong><small>Direct service; starts at http://127.0.0.1:8000</small></span>
+        </label>
+        <label class="choice-card">
+          <input type="radio" name="deployment-type" value="docker-bundle" />
+          <span><strong>Docker + Reverse Proxy Bundle</strong><small>Supplied Docker Compose and nginx setup; starts at https://localhost</small></span>
+        </label>
+      </div>
+      <label id="listener-tls-toggle" class="direct-https-toggle hidden">
+        <input id="listener-tls-enabled" type="checkbox" disabled />
+        <span><strong>Serve direct HTTPS</strong><small>Use Secure session cookies and change portal URLs to https.</small></span>
+      </label>
+      <div class="url-grid">
+        <label>Admin URL<input id="url-admin" placeholder="admin base URL" size="40" value="https://localhost/" disabled /></label>
+        <label>Certificate Operator URL<input id="url-superuser" placeholder="Certificate Operator base URL" size="40" value="https://localhost/" disabled /></label>
+        <label>Frontend URL<input id="url-frontend" placeholder="frontend base URL" size="40" value="https://localhost/" disabled /></label>
+      </div>
+    </section>
+
+    <section id="listener-fieldset" class="setup-section" aria-labelledby="listener-title">
+      <h2 id="listener-title" class="section-title">Listener settings</h2>
+      <p class="hint">Deployment type controls how the online CA service starts after setup. It never changes the already-running setup listener.</p>
+      <p id="listener-direct-guidance" class="hint hidden"><strong>Direct service selected.</strong> Choose the local interface and port for the Python service.</p>
+      <div id="listener-direct-fields" class="url-grid hidden">
+        <label>Bind address<input id="listener-bind-host" value="127.0.0.1" placeholder="127.0.0.1" autocomplete="off" disabled /></label>
+        <label>Bind port<input id="listener-bind-port" type="number" min="1" max="65535" value="8000" disabled /></label>
+      </div>
+      <div id="listener-tls-fields" class="url-grid hidden">
+        <label>TLS certificate path<input id="listener-tls-cert" placeholder="/etc/myownca/tls/portal.crt" autocomplete="off" disabled /></label>
+        <label>TLS private-key path<input id="listener-tls-key" placeholder="/etc/myownca/tls/portal.key" autocomplete="off" disabled /></label>
+      </div>
+      <p id="listener-tls-guidance" class="hint hidden">Provide an existing, readable PEM certificate (leaf followed by any chain) and its matching unencrypted private key. myOwnCA validates the pair before saving it.</p>
+      <p id="listener-exposure-warning" class="listener-exposure-warning hidden" role="status">
+        This bind address may expose the CA service to other machines. Restrict administrative access with a VPN, firewall, or identity-aware proxy, and serve HTTPS.
+      </p>
+      <p id="listener-proxy-guidance" class="hint hidden">
+        <strong>Docker + Reverse Proxy Bundle selected.</strong> The supplied deployment controls the listener: the application uses the private container network and nginx publishes ports 80 and 443.
+      </p>
+    </section>
+
+    <section id="admins-fieldset" class="setup-section" aria-labelledby="admins-title" aria-describedby="admins-guidance">
+      <h2 id="admins-title" class="section-title">Initial administrator accounts</h2>
+      <p id="admins-guidance" class="hint">Choose a governance mode to see how many distinct administrators are required.</p>
+      <details><summary>Learn more</summary>
+        <p>Dual control requires two distinct administrators so the proposer cannot approve
+        their own governed role grant, password/TOTP reset, or governance downgrade.
+        Single-administrator mode permits one bootstrap admin, but removes that second-person
+        barrier for role grants and password/TOTP resets. Every admin sets a new password and
+        enrolls TOTP MFA at first login.</p>
+      </details>
+      <p>Temporary passwords are generated below. Record each enabled account's password and
+         deliver it only to that administrator; it must be changed at first login.</p>
+      <div class="admin-row">
+        <label>Admin 1 ID<input id="admin1-id" required placeholder="admin 1 id" /></label>
+        <label>Admin 1 email<input id="admin1-email" type="email" required autocomplete="email"
+          pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+          title="Use an email address like admin@example.com"
+          placeholder="admin 1 email" size="28" /></label>
+        <label>Temporary password<input id="admin1-password" type="text" required minlength="16" placeholder="admin 1 temp password (16+ chars)" size="34" /></label>
+      </div>
+      <label id="admin2-toggle-container" class="optional-admin-toggle hidden">
+        <input id="include-admin2" type="checkbox" aria-controls="admin2-fields" aria-expanded="false" />
+        <span><strong>Add a second administrator now</strong><small>Optional in Single administrator mode; useful if you expect to upgrade to Dual control later.</small></span>
+      </label>
+      <div id="admin2-fields" class="admin-row hidden">
+        <label>Admin 2 ID<input id="admin2-id" required disabled placeholder="admin 2 id" /></label>
+        <label>Admin 2 email<input id="admin2-email" type="email" required disabled autocomplete="email"
+          pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+          title="Use an email address like admin@example.com"
+          placeholder="admin 2 email" size="28" /></label>
+        <label>Temporary password<input id="admin2-password" type="text" required disabled minlength="16" placeholder="admin 2 temp password (16+ chars)" size="34" /></label>
+      </div>
+    </section>
+
+      <div class="actions-bar">
+        <div id="wizard-status">Choose an install type to enable setup completion.</div>
+        <label id="finalize-pin-field" class="hidden">PKCS#11 User PIN for final key verification (required for HSM)
+          <input id="finalize-pin" type="password" autocomplete="off">
+        </label>
+        <button id="finalize-button" disabled>Finish setup</button>
+      </div>
+      <section id="completion-panel" class="card hidden" aria-live="polite">
+        <div id="completion-output"></div>
+      </section>
+    </section>
+
+    <footer class="setup-footer">
+      <p><span data-app-version>Version…</span> · © <span data-copyright-range>2026</span> EnigmaIS · All rights reserved.</p>
+    </footer>
+  </main>
+
+  <script>
+    let csrf = sessionStorage.getItem("myownca_setup_csrf");
+    let cloudHsmTested = false;
+    let pkcs11HsmReady = false;
+    let pkcs11HsmMode = null;
+    let pkcs11DkekMode = null;
+    let pkcs11TokenInitialized = false;
+    let pkcs11TokenSerial = null;
+    let pkcs11Keys = [];
+    let pkcs11InitializationBlockedByKeys = false;
+    let issuerConfigured = false;
+    let issuerLocked = false;
+    let lastInstallType = null;
+    const $ = (id) => document.getElementById(id);
+
+    const firstCopyrightYear = 2026;
+    const currentCopyrightYear = Math.max(firstCopyrightYear, new Date().getFullYear());
+    const copyrightRange = currentCopyrightYear === firstCopyrightYear
+      ? String(firstCopyrightYear)
+      : `${firstCopyrightYear}–${currentCopyrightYear}`;
+    document.querySelectorAll("[data-copyright-range]").forEach((target) => {
+      target.textContent = copyrightRange;
+    });
+
+    // Generate a temp password (>= the server's 16-char minimum) from a CSPRNG.
+    function generatePassword(len = 20) {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789-_@%+";
+      const arr = new Uint32Array(len);
+      crypto.getRandomValues(arr);
+      let out = "";
+      for (let i = 0; i < len; i++) out += chars[arr[i] % chars.length];
+      return out;
+    }
+    $("admin1-password").value = generatePassword();
+    $("admin2-password").value = generatePassword();
+
+    const deploymentTypes = {
+      "bare-metal": { topology: "direct", defaultUrl: "http://127.0.0.1:8000/" },
+      "docker-bundle": { topology: "proxy", defaultUrl: "https://localhost/" },
+    };
+    const publicUrlInputs = ["url-admin", "url-superuser", "url-frontend"];
+
+    function selectedDeploymentType() {
+      return document.querySelector('input[name="deployment-type"]:checked')?.value || null;
+    }
+
+    function selectedListenerTopology() {
+      return deploymentTypes[selectedDeploymentType()]?.topology || null;
+    }
+
+    function setPublicUrls(value) {
+      publicUrlInputs.forEach((id) => { $(id).value = value; });
+    }
+
+    function deploymentDefaultUrl(deploymentType) {
+      const defaultUrl = deploymentTypes[deploymentType]?.defaultUrl;
+      if (
+        deploymentType === "bare-metal"
+        && $("listener-tls-enabled").checked
+        && defaultUrl
+      ) {
+        return defaultUrl.replace(/^http:/, "https:");
+      }
+      return defaultUrl;
+    }
+
+    function applyDeploymentUrlDefaults(deploymentType) {
+      const defaultUrl = deploymentDefaultUrl(deploymentType);
+      if (defaultUrl) setPublicUrls(defaultUrl);
+    }
+
+    function setPublicUrlProtocol(protocol) {
+      const fallback = deploymentDefaultUrl("bare-metal");
+      publicUrlInputs.forEach((id) => {
+        const value = $(id).value.trim();
+        try {
+          const url = new URL(value || fallback);
+          if (["http:", "https:"].includes(url.protocol)) url.protocol = protocol;
+          $(id).value = url.toString();
+        } catch {
+          $(id).value = fallback;
+        }
+      });
+    }
+
+    function applyServiceUrlsState(state) {
+      const serviceUrls = state?.service_urls;
+      if (!serviceUrls) return false;
+      const mappings = {
+        "url-admin": serviceUrls.admin,
+        "url-superuser": serviceUrls.superuser,
+        "url-frontend": serviceUrls.frontend,
+      };
+      Object.entries(mappings).forEach(([id, value]) => {
+        if (value) $(id).value = value;
+      });
+      return true;
+    }
+
+    function isLoopbackBindHost(host) {
+      const normalized = host.trim().toLowerCase();
+      return normalized === "localhost" || normalized === "::1" || normalized.startsWith("127.");
+    }
+
+    function updateDeploymentFields() {
+      const deploymentType = selectedDeploymentType();
+      const topology = selectedListenerTopology();
+      const direct = topology === "direct";
+      const proxy = topology === "proxy";
+      publicUrlInputs.forEach((id) => { $(id).disabled = !deploymentType; });
+      $("listener-direct-guidance").classList.toggle("hidden", !direct);
+      $("listener-direct-fields").classList.toggle("hidden", !direct);
+      $("listener-tls-toggle").classList.toggle("hidden", !direct);
+      $("listener-proxy-guidance").classList.toggle("hidden", !proxy);
+      $("listener-bind-host").disabled = !direct;
+      $("listener-bind-port").disabled = !direct;
+      $("listener-tls-enabled").disabled = !direct;
+      const directTls = direct && $("listener-tls-enabled").checked;
+      $("listener-tls-fields").classList.toggle("hidden", !directTls);
+      $("listener-tls-guidance").classList.toggle("hidden", !directTls);
+      $("listener-tls-cert").disabled = !directTls;
+      $("listener-tls-key").disabled = !directTls;
+      const host = $("listener-bind-host").value;
+      $("listener-exposure-warning").classList.toggle(
+        "hidden",
+        !direct || isLoopbackBindHost(host),
+      );
+      updateFinalizeAvailability();
+    }
+
+    function listenerConfigurationReady() {
+      const topology = selectedListenerTopology();
+      if (!topology) return false;
+      if (topology === "proxy") return true;
+      const host = $("listener-bind-host").value.trim();
+      const port = Number($("listener-bind-port").value);
+      const tlsReady = !$("listener-tls-enabled").checked || (
+        Boolean($("listener-tls-cert").value.trim())
+        && Boolean($("listener-tls-key").value.trim())
+      );
+      return Boolean(host) && Number.isInteger(port) && port >= 1 && port <= 65535 && tlsReady;
+    }
+
+    function listenerPayload() {
+      const topology = selectedListenerTopology();
+      if (!topology) {
+        throw new Error("Choose Bare metal or Docker + Reverse Proxy Bundle before finishing setup.");
+      }
+      if (topology === "proxy") return { topology };
+      const bindHost = $("listener-bind-host").value.trim();
+      const bindPort = Number($("listener-bind-port").value);
+      if (!bindHost || !Number.isInteger(bindPort) || bindPort < 1 || bindPort > 65535) {
+        throw new Error("Enter a bind address and a port from 1 to 65535.");
+      }
+      const tlsEnabled = $("listener-tls-enabled").checked;
+      if (tlsEnabled && (!$("listener-tls-cert").value.trim() || !$("listener-tls-key").value.trim())) {
+        throw new Error("Provide both TLS certificate and private-key paths for direct HTTPS.");
+      }
+      return {
+        topology,
+        bind_host: bindHost,
+        bind_port: bindPort,
+        tls_enabled: tlsEnabled,
+        tls_cert: tlsEnabled ? $("listener-tls-cert").value.trim() : "",
+        tls_key: tlsEnabled ? $("listener-tls-key").value.trim() : "",
+      };
+    }
+
+    function applyDeploymentState(state, hasSavedUrls = false) {
+      const listener = state?.listener;
+      const deploymentType = listener?.topology === "direct"
+        ? "bare-metal"
+        : listener?.topology === "proxy"
+          ? "docker-bundle"
+          : null;
+      document.querySelectorAll('input[name="deployment-type"]').forEach((radio) => {
+        radio.checked = radio.value === deploymentType;
+      });
+      if (listener?.bind_host) $("listener-bind-host").value = listener.bind_host;
+      if (listener?.bind_port) $("listener-bind-port").value = String(listener.bind_port);
+      $("listener-tls-enabled").checked = Boolean(listener?.tls_enabled);
+      $("listener-tls-cert").value = listener?.tls_cert || "";
+      $("listener-tls-key").value = listener?.tls_key || "";
+      if (deploymentType && !hasSavedUrls) {
+        setPublicUrls(deploymentDefaultUrl(deploymentType));
+      }
+      updateDeploymentFields();
+    }
+
+    async function saveDeploymentType() {
+      await api("/setup/listener", {
+        method: "POST",
+        body: JSON.stringify(listenerPayload()),
+      });
+      const serviceState = await api("/setup/service-urls", {
+        method: "POST",
+        body: JSON.stringify({
+          admin: $("url-admin").value,
+          superuser: $("url-superuser").value,
+          frontend: $("url-frontend").value,
+        }),
+      });
+      applyServiceUrlsState(serviceState);
+      applyDeploymentState(serviceState, true);
+    }
+
+    async function saveDirectListener() {
+      if (selectedListenerTopology() !== "direct" || !listenerConfigurationReady()) return;
+      const state = await api("/setup/listener", {
+        method: "POST",
+        body: JSON.stringify(listenerPayload()),
+      });
+      applyDeploymentState(state, Boolean(state.service_urls));
+    }
+
+    function selectedStorageLocation() {
+      return document.querySelector('input[name="key-storage-location"]:checked')?.value || "local";
+    }
+
+    function selectedHsmBackend() {
+      const backendName = selectedStorageLocation() === "cloud" ? "cloud-hsm-backend" : "local-hsm-backend";
+      return document.querySelector(`input[name="${backendName}"]:checked`)?.value || (selectedStorageLocation() === "cloud" ? "aws_kms" : "software");
+    }
+
+    function cloudHsmSelected() {
+      return ["aws_kms", "azure_key_vault"].includes(selectedHsmBackend());
+    }
+
+    function selectedInstallType() {
+      return document.querySelector('input[name="install-type"]:checked')?.value || null;
+    }
+
+    function updateInstallTypeFields() {
+      $("root-certificate-fieldset").classList.toggle("hidden", selectedInstallType() !== "production");
+      const lab = selectedInstallType() === "lab";
+      document.querySelectorAll("[data-production-only]").forEach((option) => {
+        option.querySelectorAll("input").forEach((control) => {
+          control.disabled = lab;
+        });
+        if (!option.dataset.productionGuard) {
+          option.addEventListener("click", (event) => {
+            if (selectedInstallType() === "lab") {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          }, true);
+          option.dataset.productionGuard = "true";
+        }
+        option.classList.toggle("production-only-disabled", lab);
+        option.setAttribute("aria-disabled", String(lab));
+        option.title = lab ? "Available for Production setup only." : "";
+      });
+      if (lab) {
+        document.querySelector('input[name="key-storage-location"][value="local"]').checked = true;
+        document.querySelector('input[name="local-hsm-backend"][value="software"]').checked = true;
+      }
+      updateHsmFields();
+      updateIssuerProductionRootStatus();
+    }
+
+    function syncTotpDefaultsForInstallType() {
+      const installType = selectedInstallType();
+      if (installType === "lab") {
+        document.querySelectorAll('input[data-lab-default="true"]').forEach((input) => { input.checked = false; });
+      } else if (installType === "production" && lastInstallType === "lab") {
+        document.querySelectorAll('input[data-lab-default="true"]').forEach((input) => { input.checked = true; });
+      }
+      lastInstallType = installType;
+    }
+
+    function selectedGovernanceMode() {
+      return document.querySelector('input[name="governance-mode"]:checked')?.value || null;
+    }
+
+    function selectedTotpRoles() {
+      return [...document.querySelectorAll('input[name="totp-role"]:checked')]
+        .map((input) => input.value);
+    }
+
+    function applyTotpPolicyState(state) {
+      const required = new Set(state?.totp_required_roles || ["admin", "superuser"]);
+      document.querySelectorAll('input[name="totp-role"]').forEach((input) => {
+        input.checked = required.has(input.value);
+      });
+    }
+
+    function applyGovernanceState(state) {
+      const mode = state?.governance_mode || null;
+      document.querySelectorAll('input[name="governance-mode"]').forEach((radio) => {
+        radio.checked = radio.value === mode;
+      });
+      updateGovernanceFields();
+    }
+
+    function rootCertificateReady(installType) {
+      return installType !== "production"
+        || issuerConfigured
+        || issuerLocked
+        || $("root-cert-verify-status").classList.contains("status-success");
+    }
+
+    function databaseConfigurationReady() {
+      const selected = document.querySelector('input[name="db-kind"]:checked');
+      if (!selected) return false;
+      if (selected.value === "sqlite") return true;
+      return ["db-host", "db-name", "db-user", "db-password"].every((id) => $(id).value.trim())
+        && Number.isInteger(Number($("db-port").value))
+        && Number($("db-port").value) > 0;
+    }
+
+    function initialAdministratorsReady(governanceMode) {
+      const fields = ["admin1-id", "admin1-email", "admin1-password"];
+      if (governanceMode === "dual_control" || $("include-admin2").checked) {
+        fields.push("admin2-id", "admin2-email", "admin2-password");
+      }
+      return fields.every((id) => $(id).checkValidity());
+    }
+
+    function updateFinalizeAvailability() {
+      const installType = selectedInstallType();
+      const governanceMode = selectedGovernanceMode();
+      const rootReady = rootCertificateReady(installType);
+      const databaseReady = databaseConfigurationReady();
+      const cloudReady = !cloudHsmSelected() || cloudHsmTested;
+      const pkcs11Ready = selectedHsmBackend() !== "pkcs11" || pkcs11HsmReady;
+      const finalPinReady = selectedHsmBackend() !== "pkcs11" || Boolean($("finalize-pin").value.trim());
+      const adminsReady = initialAdministratorsReady(governanceMode);
+      const listenerReady = listenerConfigurationReady();
+      const ready = Boolean(
+        installType
+        && rootReady
+        && databaseReady
+        && cloudReady
+        && pkcs11Ready
+        && issuerConfigured
+        && governanceMode
+        && adminsReady
+        && finalPinReady
+        && listenerReady,
+      );
+      $("finalize-button").disabled = !ready;
+      if (!installType) {
+        $("wizard-status").textContent = "Choose an install type to continue.";
+      } else if (!rootReady) {
+        $("wizard-status").textContent = "Import and verify the Root CA certificate before continuing.";
+      } else if (!databaseReady) {
+        $("wizard-status").textContent = "Complete the database configuration before continuing.";
+      } else if (!cloudReady) {
+        $("wizard-status").textContent = "Check the current cloud key-storage configuration before finishing setup.";
+      } else if (!pkcs11Ready) {
+        $("wizard-status").textContent = "Initialize or adopt the selected HSM and complete its key setup before provisioning.";
+      } else if (!issuerConfigured) {
+        $("wizard-status").textContent = "Provision and activate the issuing Sub CA before finishing setup.";
+      } else if (!governanceMode) {
+        $("wizard-status").textContent = "Choose an administrative governance mode to continue.";
+      } else if (!adminsReady) {
+        $("wizard-status").textContent = "Complete the initial administrator account fields before finishing setup.";
+      } else if (!finalPinReady) {
+        $("wizard-status").textContent = "Enter the PKCS#11 User PIN for final key verification before finishing setup.";
+      } else if (!listenerReady) {
+        $("wizard-status").textContent = "Choose a deployment type and complete any required listener settings before finishing setup.";
+      } else {
+        $("wizard-status").textContent = "The issuing Sub CA is active. Finish setup to start the service.";
+      }
+    }
+
+    function updateGovernanceFields() {
+      const installType = selectedInstallType();
+      const mode = selectedGovernanceMode();
+      const guidance = $("governance-mode-guidance");
+      const governanceInputs = document.querySelectorAll('input[name="governance-mode"]');
+      governanceInputs.forEach((input) => { input.disabled = !installType; });
+
+      guidance.classList.toggle("is-risk", installType === "production" && mode === "single_admin");
+      if (!installType) {
+        guidance.textContent = "Choose an install type first.";
+      } else if (!mode && installType === "production") {
+        guidance.textContent = "Production requires an explicit choice. Dual control is recommended; Single administrator is permitted only when you accept the loss of independent approval.";
+      } else if (installType === "lab" && mode === "single_admin") {
+        guidance.textContent = "Test/Lab starts in Single administrator mode for a quick evaluation. You may opt into Dual control now or upgrade safely later.";
+      } else if (mode === "dual_control") {
+        guidance.textContent = "Dual control requires two distinct bootstrap administrators. Privileged role grants, privileged password/TOTP resets, and a governance downgrade require approval by an administrator other than the proposer.";
+      } else if (mode === "single_admin") {
+        guidance.textContent = "Single administrator permits one person to apply privileged role grants and privileged password/TOTP resets without independent approval. A compromised administrator therefore has no second-person barrier for those operations.";
+      } else {
+        guidance.textContent = "Choose Single administrator or Dual control.";
+      }
+
+      const requiresSecondAdmin = mode === "dual_control";
+      const optionalSecondAdmin = mode === "single_admin" && $("include-admin2").checked;
+      const includesSecondAdmin = requiresSecondAdmin || optionalSecondAdmin;
+      $("admin2-toggle-container").classList.toggle("hidden", mode !== "single_admin");
+      $("include-admin2").setAttribute("aria-expanded", String(optionalSecondAdmin));
+      const secondFields = $("admin2-fields");
+      secondFields.classList.toggle("hidden", !includesSecondAdmin);
+      secondFields.querySelectorAll("input").forEach((input) => {
+        input.disabled = !includesSecondAdmin;
+        input.required = includesSecondAdmin;
+        if (!includesSecondAdmin) input.setCustomValidity("");
+      });
+      $("admins-guidance").textContent = requiresSecondAdmin
+        ? "Dual control requires two distinct administrators with different IDs and email addresses."
+        : mode === "single_admin"
+          ? "Single-administrator mode requires one bootstrap administrator. A second distinct administrator is optional and can prepare this installation for a later Dual control upgrade."
+          : "Choose a governance mode to see how many distinct administrators are required.";
+      updateFinalizeAvailability();
+    }
+
+    function setHsmStatus(message, tone = "neutral") {
+      const status = $("hsm-local-status");
+      status.textContent = message;
+      status.className = `status-message status-${tone}`;
+    }
+
+    function setPkcs11ProbeStatus(message, tone = "neutral") {
+      const status = $("pkcs11-probe-status");
+      status.textContent = message;
+      status.className = `status-message status-${tone}`;
+    }
+
+    function clearPkcs11ProbeStatus() {
+      $("pkcs11-probe-status").classList.add("hidden");
+    }
+
+    function setPkcs11AdoptStatus(message, tone = "neutral") {
+      const status = $("pkcs11-adopt-status");
+      status.textContent = message;
+      status.className = `status-message status-${tone}`;
+    }
+
+    function clearPkcs11AdoptStatus() {
+      $("pkcs11-adopt-status").classList.add("hidden");
+    }
+
+    function setPkcs11InitializeStatus(message, tone = "neutral") {
+      const status = $("pkcs11-initialize-status");
+      status.textContent = message;
+      status.className = `status-message status-${tone}`;
+    }
+
+    function clearPkcs11InitializeStatus() {
+      $("pkcs11-initialize-status").classList.add("hidden");
+    }
+
+    function setPkcs11ShareStatus(message, tone = "neutral") {
+      const status = $("pkcs11-share-status");
+      status.textContent = message;
+      status.className = `status-message status-${tone}`;
+    }
+
+    function clearPkcs11ShareStatus() {
+      $("pkcs11-share-status").classList.add("hidden");
+    }
+
+    function setPkcs11ImportStatus(message, tone = "neutral") {
+      const status = $("pkcs11-import-status");
+      status.textContent = message;
+      status.className = `status-message status-${tone}`;
+    }
+
+    function clearPkcs11ImportStatus() {
+      $("pkcs11-import-status").classList.add("hidden");
+    }
+
+    function setPkcs11Keys(keys) {
+      pkcs11Keys = Array.isArray(keys)
+        ? keys.filter((item) => item && String(item.label || "").trim())
+        : [];
+      renderIssuerExistingHsmKeys();
+      updateIssuerRequestKeyMode();
+      updatePkcs11InitializeAction();
+    }
+
+    function hsmKeyReference(key) {
+      return String(key?.key_ref ?? key?.label ?? "").trim();
+    }
+
+    function hsmKeyAlgorithm(key) {
+      const keyType = String(key?.key_type || "").toUpperCase();
+      const keySize = Number(key?.key_size);
+      if (keyType === "RSA" && [2048, 3072, 4096].includes(keySize)) {
+        return `rsa-${keySize}`;
+      }
+      if (keyType === "EC" && [256, 384, 521].includes(keySize)) {
+        return `ecdsa-p${keySize}`;
+      }
+      return null;
+    }
+
+    function selectedIssuerExistingHsmKey() {
+      const keyRef = $("issuer-existing-hsm-key").value;
+      return pkcs11Keys.find((key) => hsmKeyReference(key) === keyRef) || null;
+    }
+
+    function clearIssuerExistingHsmStatus() {
+      $("issuer-existing-hsm-status").textContent = "";
+      $("issuer-existing-hsm-status").className = "status-message status-neutral hidden";
+    }
+
+    function setIssuerExistingHsmStatus(message, tone = "neutral") {
+      const status = $("issuer-existing-hsm-status");
+      status.textContent = message;
+      status.className = `status-message status-${tone}`;
+    }
+
+    function updateIssuerExistingHsmDetails() {
+      const details = $("issuer-existing-hsm-details");
+      const key = selectedIssuerExistingHsmKey();
+      if (!key) {
+        details.classList.add("hidden");
+        return;
+      }
+      $("issuer-existing-hsm-label").textContent = String(key.label || "—");
+      $("issuer-existing-hsm-algorithm").textContent = hsmKeyAlgorithm(key) || "Unsupported";
+      $("issuer-existing-hsm-size").textContent = key.key_size ? `${key.key_size} bits` : "Unknown";
+      $("issuer-existing-hsm-ref").textContent = hsmKeyReference(key) || "—";
+      details.classList.remove("hidden");
+    }
+
+    function renderIssuerExistingHsmKeys() {
+      const select = $("issuer-existing-hsm-key");
+      if (!select) return;
+      select.replaceChildren(new Option("List keys to choose a private key", ""));
+      for (const key of pkcs11Keys) {
+        const reference = hsmKeyReference(key);
+        if (!reference) continue;
+        const algorithm = hsmKeyAlgorithm(key);
+        const option = new Option(
+          `${key.label || reference} · ${algorithm || String(key.key_type || "Unknown")} · ${key.key_size || "size unknown"}`
+            + (key.key_reference != null ? ` · ref ${key.key_reference}` : ""),
+          reference,
+        );
+        option.disabled = !algorithm;
+        if (!algorithm) option.textContent += " · unsupported";
+        select.add(option);
+      }
+      updateIssuerExistingHsmDetails();
+    }
+
+    function updateIssuerExistingKeyView() {
+      const backend = selectedHsmBackend();
+      const isHsm = backend === "pkcs11";
+      const isAws = backend === "aws_kms";
+      const hsmFields = $("issuer-existing-hsm-fields");
+      const cloudFields = $("issuer-existing-cloud-fields");
+      if (!hsmFields || !cloudFields) return;
+      hsmFields.classList.toggle("hidden", !isHsm);
+      cloudFields.classList.toggle("hidden", isHsm);
+      $("issuer-existing-heading").textContent = isHsm
+        ? "Import an existing Sub CA certificate and HSM key"
+        : "Import an existing Sub CA certificate and cloud key";
+      $("issuer-existing-ref-label").textContent = isAws
+        ? "AWS KMS key ARN"
+        : "Azure Key Vault key URL";
+      $("issuer-existing-ref").placeholder = isAws
+        ? "arn:aws:kms:region:account:key/…"
+        : "https://vault.vault.azure.net/keys/name/version";
+      if (!isHsm) {
+        $("issuer-existing-hsm-pin").value = "";
+        $("issuer-existing-hsm-key").value = "";
+        $("issuer-existing-hsm-key").replaceChildren(new Option("List keys to choose a private key", ""));
+        $("issuer-existing-hsm-details").classList.add("hidden");
+        clearIssuerExistingHsmStatus();
+      }
+    }
+
+    function applyPkcs11ProbeResult(result) {
+      pkcs11HsmReady = Boolean(result.ready);
+      pkcs11HsmMode = result.readiness_mode || null;
+      pkcs11DkekMode = result.dkek_mode || null;
+      pkcs11TokenInitialized = Boolean(result.initialized);
+      pkcs11TokenSerial = result.serial || null;
+      setPkcs11Keys(result.keys || []);
+    }
+
+    function pkcs11DkekSummary(result) {
+      return result.dkek?.available
+        ? result.dkek.shares_total
+          ? `${result.dkek.shares_imported}/${result.dkek.shares_total}, KCV ${result.dkek.kcv || "pending"}`
+          : result.initialized
+            ? "disabled"
+            : "not configured"
+        : "unavailable";
+    }
+
+    function updateIssuerRequestKeyMode() {
+      $("issuer-new-algorithm-field").classList.remove("hidden");
+      $("issuer-new-mode").textContent = "Create new key + offline ceremony";
+      $("issuer-request-heading").textContent = "Create a new Sub CA";
+    }
+
+    function updateIssuerModeActions() {
+      const installType = selectedInstallType();
+      const backend = selectedHsmBackend();
+      const pkcs11Mode = selectedPkcs11SetupMode();
+      const canAdoptExistingKey = backend === "aws_kms"
+        || backend === "azure_key_vault"
+        || (backend === "pkcs11" && pkcs11Mode === "existing");
+      const canRestoreWrappedKey = backend === "pkcs11"
+        && ["existing", "recovery"].includes(pkcs11Mode);
+      const lab = installType === "lab";
+      $("issuer-lab-mode").classList.toggle("hidden", !lab);
+      $("issuer-new-mode").classList.toggle("hidden", !lab && pkcs11Mode === "recovery");
+      $("issuer-existing-mode").classList.toggle(
+        "hidden",
+        !lab && !canAdoptExistingKey,
+      );
+      $("issuer-file-mode").classList.toggle(
+        "hidden",
+        !lab && backend !== "software",
+      );
+      $("issuer-dkek-mode").classList.toggle(
+        "hidden",
+        !lab && !canRestoreWrappedKey,
+      );
+      updateIssuerExistingKeyView();
+      updateIssuerPkcs11PinFields();
+    }
+
+    function updateIssuerPkcs11PinFields() {
+      const isPkcs11 = selectedHsmBackend() === "pkcs11";
+      ["issuer-new-pin-field", "issuer-response-pin-field", "issuer-file-pin-field"].forEach((fieldId) => {
+        const field = $(fieldId);
+        const input = field.querySelector("input");
+        field.classList.toggle("hidden", !isPkcs11);
+        input.disabled = !isPkcs11;
+        if (!isPkcs11) input.value = "";
+      });
+    }
+
+    function updatePkcs11InitializeAction() {
+      const button = $("pkcs11-initialize-button");
+      const willErase =
+        selectedPkcs11SetupMode() !== "existing"
+          && (pkcs11Keys.length > 0 || pkcs11InitializationBlockedByKeys);
+      button.textContent = willErase ? "Erase and initialize HSM" : "Initialize HSM";
+      button.classList.toggle("danger-button", willErase);
+    }
+
+    function selectedPkcs11SetupMode() {
+      return document.querySelector('input[name="pkcs11-setup-mode"]:checked')?.value || "existing";
+    }
+
+    function clearPkcs11SetupChoices() {
+      document.querySelectorAll(
+        'input[name="pkcs11-setup-mode"], input[name="pkcs11-dkek-migration"]',
+      ).forEach((radio) => { radio.checked = false; });
+    }
+
+    function selectedPkcs11DkekMode() {
+      return document.querySelector('input[name="pkcs11-dkek-migration"]:checked')?.value || "shares";
+    }
+
+    function normalizeDkekShareCount(input) {
+      if (input.disabled) return Number(input.value);
+      const value = Number(input.value);
+      const normalized = Number.isFinite(value)
+        ? Math.min(255, Math.max(1, Math.round(value)))
+        : 1;
+      input.value = String(normalized);
+      return normalized;
+    }
+
+    function renderPkcs11ShareRows(count) {
+      const container = $("pkcs11-share-rows");
+      const existing = [...container.querySelectorAll(".pkcs11-share-row")].map((row) => ({
+        filename: row.querySelector('[data-share-field="filename"]')?.value || "",
+        password: row.querySelector('[data-share-field="password"]')?.value || "",
+      }));
+      container.textContent = "";
+      for (let index = 0; index < count; index += 1) {
+        const number = index + 1;
+        const values = existing[index] || {};
+        const row = document.createElement("div");
+        row.className = "pkcs11-share-row";
+        row.dataset.shareIndex = String(number);
+
+        const filenameLabel = document.createElement("label");
+        filenameLabel.textContent = `Share ${number} filename`;
+        const filename = document.createElement("input");
+        filename.type = "text";
+        filename.required = true;
+        filename.maxLength = 255;
+        filename.pattern = "[A-Za-z0-9][A-Za-z0-9_.-]*\\.pbe";
+        filename.title = "Use letters, numbers, dots, underscores, or hyphens and end with .pbe";
+        filename.autocomplete = "off";
+        filename.dataset.shareField = "filename";
+        filename.value = values.filename ?? `dkek-share-${number}.pbe`;
+        filenameLabel.append(filename);
+
+        const passwordLabel = document.createElement("label");
+        passwordLabel.textContent = `Share ${number} password`;
+        const password = document.createElement("input");
+        password.type = "password";
+        password.required = true;
+        password.autocomplete = "new-password";
+        password.dataset.shareField = "password";
+        password.value = values.password ?? "";
+        passwordLabel.append(password);
+
+        row.append(filenameLabel, passwordLabel);
+        container.append(row);
+      }
+      const noun = count === 1 ? "share" : "shares";
+      $("pkcs11-share-create-button").textContent =
+        `Generate and download ${count === 1 ? "" : "all "}${count} ${noun}`;
+    }
+
+    function collectPkcs11ShareSpecs(expectedCount) {
+      const rows = [...$("pkcs11-share-rows").querySelectorAll(".pkcs11-share-row")];
+      if (rows.length !== expectedCount) {
+        renderPkcs11ShareRows(expectedCount);
+        throw new Error(`Provide exactly ${expectedCount} DKEK share entries.`);
+      }
+      const filenames = new Set();
+      const passwords = new Set();
+      const shares = [];
+      for (const [index, row] of rows.entries()) {
+        const filenameInput = row.querySelector('[data-share-field="filename"]');
+        const passwordInput = row.querySelector('[data-share-field="password"]');
+        filenameInput.setCustomValidity("");
+        passwordInput.setCustomValidity("");
+        const filename = filenameInput.value.trim();
+        filenameInput.value = filename;
+        if (!filenameInput.checkValidity()) {
+          filenameInput.reportValidity();
+          filenameInput.focus();
+          throw new Error(`Share ${index + 1} needs a valid .pbe filename.`);
+        }
+        if (!passwordInput.checkValidity()) {
+          passwordInput.reportValidity();
+          passwordInput.focus();
+          throw new Error(`Share ${index + 1} needs a password.`);
+        }
+        const normalizedFilename = filename.toLocaleLowerCase("en-US");
+        if (filenames.has(normalizedFilename)) {
+          filenameInput.setCustomValidity("Every DKEK share filename must be unique.");
+          filenameInput.reportValidity();
+          filenameInput.focus();
+          throw new Error("Every DKEK share filename must be unique.");
+        }
+        if (passwords.has(passwordInput.value)) {
+          passwordInput.setCustomValidity("Every DKEK share must use a different password.");
+          passwordInput.reportValidity();
+          passwordInput.focus();
+          throw new Error("Every DKEK share must use a different password.");
+        }
+        filenames.add(normalizedFilename);
+        passwords.add(passwordInput.value);
+        shares.push({ filename, password: passwordInput.value });
+      }
+      return shares;
+    }
+
+    function selectedPkcs11DkekShares() {
+      const mode = selectedPkcs11SetupMode();
+      if (mode === "recovery") {
+        return normalizeDkekShareCount($("pkcs11-recovery-dkek-count"));
+      }
+      if (mode === "new" && selectedPkcs11DkekMode() === "disabled") return 0;
+      return normalizeDkekShareCount($("pkcs11-new-dkek-count"));
+    }
+
+    function validatePkcs11Initialization() {
+      const mode = selectedPkcs11SetupMode();
+      if (mode === "recovery") {
+        normalizeDkekShareCount($("pkcs11-recovery-dkek-count"));
+      } else if (mode === "new" && selectedPkcs11DkekMode() === "shares") {
+        normalizeDkekShareCount($("pkcs11-new-dkek-count"));
+      }
+      const currentPin = $("pkcs11-current-pin");
+      currentPin.required = pkcs11TokenInitialized;
+      const fields = [
+        ["pkcs11-so-pin", "SO-PIN"],
+        ["pkcs11-new-pin", "New User PIN"],
+        ["pkcs11-init-reason", "Reason"],
+        ["pkcs11-init-confirmation", "Confirmation"],
+      ];
+      if (mode === "recovery") {
+        fields.splice(2, 0, ["pkcs11-recovery-dkek-count", "Number of existing DKEK shares"]);
+      } else if (mode === "new" && selectedPkcs11DkekMode() === "shares") {
+        fields.splice(2, 0, ["pkcs11-new-dkek-count", "Number of DKEK shares"]);
+      }
+      if (pkcs11TokenInitialized) {
+        fields.unshift(["pkcs11-current-pin", "Current User PIN"]);
+      }
+      for (const [id, label] of fields) {
+        const input = $(id);
+        if (!input.checkValidity()) {
+          const message = `${label}: ${input.validationMessage}`;
+          setPkcs11InitializeStatus(message, "error");
+          input.reportValidity();
+          input.focus();
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function updateHsmFields() {
+      const backend = selectedHsmBackend();
+      const isAws = backend === "aws_kms";
+      const isAzure = backend === "azure_key_vault";
+      const isCloud = isAws || isAzure;
+      const isLocal = !isCloud;
+      const storageLocation = selectedStorageLocation();
+      if (storageLocation === "cloud" && !document.querySelector('input[name="cloud-hsm-backend"]:checked')) document.querySelector('input[name="cloud-hsm-backend"][value="aws_kms"]').checked = true;
+      $("local-key-options").classList.toggle("hidden", storageLocation !== "local");
+      $("cloud-key-options").classList.toggle("hidden", storageLocation !== "cloud");
+      $("pkcs11-fields").classList.toggle("hidden", backend !== "pkcs11");
+      $("finalize-pin-field").classList.toggle("hidden", backend !== "pkcs11");
+      $("finalize-pin").required = backend === "pkcs11";
+      $("finalize-pin").disabled = backend !== "pkcs11";
+      $("finalize-pin").setAttribute("aria-required", String(backend === "pkcs11"));
+      if (backend !== "pkcs11") $("finalize-pin").value = "";
+      if (backend !== "pkcs11") clearPkcs11ProbeStatus();
+      updatePkcs11Mode();
+      $("aws-kms-fields").classList.toggle("hidden", !isAws);
+      $("azure-key-vault-fields").classList.toggle("hidden", !isAzure);
+      $("cloud-service-key-options").classList.toggle("hidden", !isCloud);
+      const cloudOption = $("service-key-cloud-option");
+      cloudOption.disabled = !isCloud;
+      cloudOption.value = isCloud ? backend : "";
+      cloudOption.textContent = isAws ? "AWS KMS" : isAzure ? "Azure Key Vault" : "Selected cloud provider";
+      if (!isCloud || !["software", backend].includes($("service-key-backend").value)) {
+        $("service-key-backend").value = "software";
+      }
+      if (isLocal && backend === "software") {
+        setHsmStatus(
+          "Local software mode needs no AWS or Azure configuration.",
+          "neutral",
+        );
+        $("hsm-cloud-status").textContent = "";
+      } else if (isLocal && backend === "pkcs11") {
+        setHsmStatus(
+          "PKCS#11 token selected. The User PIN is never saved.",
+          "neutral",
+        );
+        $("hsm-cloud-status").textContent = "";
+      } else if (isCloud) {
+        setHsmStatus("Cloud key storage selected.", "neutral");
+        $("hsm-cloud-status").textContent = cloudHsmTested
+          ? "Cloud connection verified for the current configuration."
+          : "Check this cloud configuration before finishing setup.";
+      }
+      updateIssuerRequestKeyMode();
+      updateIssuerModeActions();
+      updateIssuerResetPinVisibility();
+      updateFinalizeAvailability();
+    }
+
+    function updatePkcs11Mode() {
+      const mode = selectedPkcs11SetupMode();
+      const createsShares = mode === "new" && selectedPkcs11DkekMode() === "shares";
+      const disablesDkek = mode === "new" && !createsShares;
+      const recovery = mode === "recovery";
+      $("pkcs11-existing-actions").classList.toggle("hidden", mode !== "existing");
+      $("pkcs11-adopt-pin").disabled = mode !== "existing";
+      $("pkcs11-dkek-choice").classList.toggle("hidden", mode !== "new");
+      if (mode !== "existing") clearPkcs11AdoptStatus();
+      if (mode === "existing") {
+        clearPkcs11InitializeStatus();
+        clearPkcs11ShareStatus();
+        clearPkcs11ImportStatus();
+      }
+      $("pkcs11-new-share-step").classList.toggle("hidden", !createsShares);
+      $("pkcs11-initialize-step").classList.toggle("hidden", mode === "existing");
+      $("pkcs11-import-step").classList.toggle("hidden", mode === "existing" || disablesDkek);
+      $("pkcs11-initialize-fields").classList.toggle("hidden", mode === "existing");
+      $("pkcs11-new-share-fields").classList.toggle("hidden", !createsShares);
+      $("pkcs11-import-fields").classList.toggle("hidden", mode === "existing" || disablesDkek);
+      const newDkekCount = $("pkcs11-new-dkek-count");
+      if (disablesDkek) {
+        if (Number(newDkekCount.value) > 0) {
+          newDkekCount.dataset.enabledValue = newDkekCount.value;
+        }
+        newDkekCount.value = "0";
+      } else if (createsShares && Number(newDkekCount.value) === 0) {
+        newDkekCount.value = newDkekCount.dataset.enabledValue || "2";
+      }
+      newDkekCount.disabled = !createsShares;
+      newDkekCount.required = createsShares;
+      if (createsShares) {
+        renderPkcs11ShareRows(Number(newDkekCount.value));
+      }
+      $("pkcs11-recovery-dkek-count-field").classList.toggle("hidden", !recovery);
+      $("pkcs11-recovery-dkek-count").disabled = !recovery;
+      $("pkcs11-recovery-dkek-count").required = recovery;
+      $("pkcs11-initialize-step-number").textContent = createsShares
+        ? "Step 2 of 3"
+        : recovery
+          ? "Step 1 of 2"
+          : "Step 1 of 1";
+      $("pkcs11-import-step-number").textContent = recovery ? "Step 2 of 2" : "Step 3 of 3";
+      updatePkcs11InitializeAction();
+      updateIssuerModeActions();
+    }
+
+    function updateIssuerResetPinVisibility() {
+      const visible = selectedHsmBackend() === "pkcs11";
+      $("issuer-reset-pin-field").classList.toggle("hidden", !visible);
+      $("issuer-reset-pin").disabled = !visible;
+    }
+
+    function invalidateCloudHsmTest() {
+      if (!cloudHsmSelected()) return;
+      cloudHsmTested = false;
+      $("hsm-cloud-status").textContent = "Cloud configuration changed. Check it again before finishing setup.";
+      updateFinalizeAvailability();
+    }
+
+    function hsmPayload() {
+      return {
+        backend: selectedHsmBackend(),
+        pkcs11_lib: $("pkcs11-lib").value,
+        token_label: $("pkcs11-token-label").value || "myOwnCA",
+        reader: $("pkcs11-reader").value,
+        aws_region: $("aws-region").value,
+        aws_access_key_id: $("aws-access-key-id").value,
+        aws_secret_access_key: $("aws-secret-access-key").value,
+        aws_session_token: $("aws-session-token").value,
+        azure_vault_url: $("azure-vault-url").value,
+        azure_tenant_id: $("azure-tenant-id").value,
+        azure_client_id: $("azure-client-id").value,
+        azure_client_secret: $("azure-client-secret").value,
+        azure_key_protection: $("azure-key-protection").value,
+        service_key_backend: $("service-key-backend").value || "software",
+      };
+    }
+
+    // On finalize, tell the operator where to sign in and surface the temp
+    // passwords to record. Built with DOM nodes (not innerHTML) so operator-typed
+    // values can't inject markup.
+    function showComplete() {
+      const selectedDeployment = selectedDeploymentType() || "docker-bundle";
+      const fallback = deploymentTypes[selectedDeployment]?.defaultUrl
+        || deploymentTypes["docker-bundle"].defaultUrl;
+      const base = ($("url-admin").value || fallback).trim().replace(/\/+$/, "");
+      const loginUrl = base + "/login";
+      const panel = $("completion-panel");
+      const status = $("completion-output");
+      status.textContent = "";
+      const done = document.createElement("p");
+      done.innerHTML = "<strong>Setup complete.</strong> The service is starting.";
+      const go = document.createElement("p");
+      go.append("Sign in at ");
+      const link = document.createElement("a");
+      link.href = loginUrl;
+      link.textContent = loginUrl;
+      go.append(link);
+      status.append(done, go);
+      const secondAdminCreated = selectedGovernanceMode() === "dual_control" || $("include-admin2").checked;
+      if ($("admin1-id").value.trim()) {
+        const note = document.createElement("p");
+        note.textContent =
+          `Record ${secondAdminCreated ? "these temporary passwords" : "this temporary password"} — deliver each only to its administrator `
+          + (selectedTotpRoles().includes("admin")
+            ? "(it must be changed and TOTP enrolled at first login):"
+            : "(it must be changed at first login; Administrator TOTP is disabled):");
+        const pre = document.createElement("pre");
+        pre.textContent = `admin 1  ${$("admin1-id").value} <${$("admin1-email").value}>  ${$("admin1-password").value}`;
+        if (secondAdminCreated) {
+          pre.textContent += `\nadmin 2  ${$("admin2-id").value} <${$("admin2-email").value}>  ${$("admin2-password").value}`;
+        }
+        status.append(note, pre);
+      }
+
+      // Next steps after the service starts. Issuer provisioning is already
+      // complete and the trust chain is immutable after this hand-off.
+      const stepsHeading = document.createElement("p");
+      stepsHeading.innerHTML = "<strong>Next steps</strong>";
+      const steps = document.createElement("ol");
+      steps.className = "next-steps";
+      const items = [
+        secondAdminCreated
+          ? "Sign in as each bootstrap administrator at the login link above using their respective temporary password."
+          : "Sign in as the bootstrap administrator at the login link above using the temporary password.",
+        selectedTotpRoles().includes("admin")
+          ? (secondAdminCreated
+            ? "For each administrator, set a new password and enroll TOTP (authenticator app)."
+            : "When prompted, set a new password and enroll TOTP (authenticator app).")
+          : "Set a new password for each bootstrap administrator. Administrator TOTP is currently disabled.",
+        selectedGovernanceMode() === "dual_control"
+          ? "In the Admin portal, have one administrator propose each Certificate Operator account and the other approve it; then review CA policy (templates, etc.)."
+          : "In the Admin portal, create your Certificate Operator account(s) and review CA policy (templates, etc.).",
+      ];
+      if (selectedGovernanceMode() === "single_admin") {
+        items.push($("include-admin2").checked
+          ? "When both administrators are active, use the governance panel to upgrade safely to Dual control."
+          : "After adding a second active Administrator, use the governance panel to upgrade safely to Dual control.");
+      }
+      items.push("Certificate Operators can then issue certificates to people and devices.");
+      for (const text of items) {
+        const li = document.createElement("li");
+        li.textContent = text;
+        steps.append(li);
+      }
+      status.append(stepsHeading, steps);
+      $("wizard-status").textContent = "Setup complete. Follow the next steps below.";
+      $("finalize-button").disabled = true;
+      panel.classList.remove("hidden");
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function apiErrorMessage(body, fallback) {
+      const detail = body?.detail ?? body?.error ?? body?.message;
+      if (Array.isArray(detail)) {
+        const messages = detail.map((item) => {
+          if (!item || typeof item !== "object") return String(item || "");
+          const location = Array.isArray(item.loc)
+            ? item.loc.filter((part) => part !== "body").join(".")
+            : "";
+          const message = String(item.msg || "Invalid value");
+          return location ? `${location}: ${message}` : message;
+        }).filter(Boolean);
+        return messages.join("; ") || fallback;
+      }
+      if (detail && typeof detail === "object") {
+        return String(detail.message || detail.error || fallback);
+      }
+      return detail ? String(detail) : fallback;
+    }
+
+    async function api(path, options = {}) {
+      const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
+      if (csrf) headers["x-csrf-token"] = csrf;
+      const resp = await fetch(path, Object.assign({ headers }, options));
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error(apiErrorMessage(body, resp.statusText));
+      }
+      return resp.json();
+    }
+
+    function clearRootCertificateVerification() {
+      const status = $("root-cert-verify-status");
+      status.textContent = "";
+      status.className = "status-message status-neutral hidden";
+      const summary = $("root-cert-verify-summary");
+      summary.textContent = "";
+      summary.classList.add("hidden");
+      updateIssuerProductionRootStatus();
+      updateFinalizeAvailability();
+    }
+
+    function clearRootCertificateInput() {
+      $("root-cert-input").value = "";
+      $("root-cert-file").value = "";
+      clearRootCertificateVerification();
+    }
+
+    function showRootCertificateVerification(result) {
+      clearIssuerProductionRootStatus();
+      const status = $("root-cert-verify-status");
+      status.textContent = "Root CA verified successfully.";
+      status.className = "status-message status-success";
+      const constraints = result.basic_constraints || {};
+      const usage = result.key_usage || {};
+      const summary = $("root-cert-verify-summary");
+      summary.textContent = [
+        `Subject: ${result.subject}`,
+        `Issuer: ${result.issuer}`,
+        `SHA-256: ${result.fingerprint_sha256}`,
+        `Validity: ${result.not_valid_before} → ${result.not_valid_after}`,
+        `Basic Constraints: CA=${constraints.ca}, pathLength=${constraints.path_length ?? "none"}`,
+        `Key Usage: keyCertSign=${usage.key_cert_sign}, cRLSign=${usage.crl_sign}`,
+      ].join("\n");
+      summary.classList.remove("hidden");
+      updateFinalizeAvailability();
+    }
+
+    function clearIssuerProductionRootStatus() {
+      const status = $("issuer-production-root-status");
+      status.textContent = "";
+      status.className = "status-message status-error hidden";
+    }
+
+    function updateIssuerProductionRootStatus() {
+      const verified = $("root-cert-verify-status").classList.contains("status-success");
+      if (selectedInstallType() === "production" && !verified) {
+        const status = $("issuer-production-root-status");
+        status.textContent = "Import the Root CA certificate before provisioning a Production issuer";
+        status.className = "status-message status-error";
+      } else {
+        clearIssuerProductionRootStatus();
+      }
+    }
+
+    const issuerPanels = [
+      "issuer-new-panel", "issuer-existing-panel", "issuer-file-panel",
+      "issuer-dkek-panel", "issuer-lab-panel",
+    ];
+
+    function showIssuerPanel(id) {
+      for (const panelId of issuerPanels) $(panelId).classList.toggle("hidden", panelId !== id);
+    }
+
+    function issuerProfiles(panelId) {
+      return [...$(panelId).querySelectorAll(".issuer-profiles input:checked")]
+        .map((input) => input.value);
+    }
+
+    function applyIssuerFoundationLock(locked) {
+      issuerLocked = Boolean(locked);
+      const lockHint = "Reset the issuer step to remove the current Sub CA before changing this setting.";
+      for (const sectionId of [
+        "install-type-fieldset", "database-fieldset", "hsm-fieldset", "root-certificate-fieldset",
+      ]) {
+        const section = $(sectionId);
+        section.querySelectorAll("input, textarea, select, button").forEach((control) => {
+          control.disabled = issuerLocked;
+        });
+        section.classList.toggle("issuer-foundation-locked", issuerLocked);
+        if (issuerLocked) {
+          section.dataset.lockHint = lockHint;
+          section.title = lockHint;
+        } else {
+          delete section.dataset.lockHint;
+          section.removeAttribute("title");
+        }
+      }
+      updateIssuerResetPinVisibility();
+      $("issuer-reset-panel").classList.toggle("hidden", !issuerLocked);
+    }
+
+    async function saveIssuerPrerequisites() {
+      if (issuerLocked) return;
+      const installType = selectedInstallType();
+      if (!installType) throw new Error("Choose Test/Lab or Production first.");
+      if (cloudHsmSelected() && !cloudHsmTested) {
+        throw new Error("Check the current cloud key-storage configuration first.");
+      }
+      if (selectedHsmBackend() === "pkcs11" && !pkcs11HsmReady) {
+        throw new Error("Initialize or adopt the selected HSM and complete its key setup first.");
+      }
+      const rootPem = await certificateInputPem("root-cert-input", "root-cert-file", false);
+      if (installType === "production" && !rootPem) {
+        throw new Error("Production setup requires the offline Root CA certificate.");
+      }
+      await api("/setup/install-type", {
+        method: "POST", body: JSON.stringify({ value: installType }),
+      });
+      await api("/setup/totp-policy", {
+        method: "POST", body: JSON.stringify({ required_roles: selectedTotpRoles() }),
+      });
+      await api("/setup/database", { method: "POST", body: JSON.stringify(dbPayload()) });
+      await api("/setup/hsm", { method: "POST", body: JSON.stringify(hsmPayload()) });
+      await api("/setup/service-urls", { method: "POST", body: JSON.stringify({
+        admin: $("url-admin").value,
+        superuser: $("url-superuser").value,
+        frontend: $("url-frontend").value,
+      }) });
+      if (rootPem) {
+        await api("/setup/root-certificate", {
+          method: "POST", body: JSON.stringify({ pem: rootPem }),
+        });
+      }
+    }
+
+    function bytesToBase64(bytes) {
+      let binary = "";
+      const chunk = 32 * 1024;
+      for (let offset = 0; offset < bytes.length; offset += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + chunk));
+      }
+      return btoa(binary);
+    }
+
+    async function fileBase64(inputId, required = true) {
+      const file = $(inputId).files?.[0];
+      if (!file) {
+        if (required) throw new Error(`Choose a file for ${inputId}.`);
+        return null;
+      }
+      if (file.size > 5 * 1024 * 1024) throw new Error(`${file.name} exceeds 5 MiB.`);
+      return bytesToBase64(new Uint8Array(await file.arrayBuffer()));
+    }
+
+    async function fileText(inputId) {
+      const file = $(inputId).files?.[0];
+      if (!file) throw new Error(`Choose a file for ${inputId}.`);
+      if (file.size > 5 * 1024 * 1024) throw new Error(`${file.name} exceeds 5 MiB.`);
+      return file.text();
+    }
+
+    async function certificateInputPem(textId, fileId, required = true, missingMessage = "Paste the certificate PEM or choose a certificate file.") {
+      const pasted = $(textId).value.trim();
+      if (pasted) return pasted;
+      const file = $(fileId).files?.[0];
+      if (!file) {
+        if (required) throw new Error(missingMessage);
+        return "";
+      }
+      return (await fileText(fileId)).trim();
+    }
+
+    function textToBase64(value) {
+      return bytesToBase64(new TextEncoder().encode(value));
+    }
+
+    async function bundleInputBase64() {
+      const pasted = $("issuer-file-bundle-pem").value.trim();
+      return pasted ? textToBase64(pasted) : fileBase64("issuer-file-bundle");
+    }
+
+    async function textOrFileBase64(textId, fileId, required = true, missingMessage = "Paste the PEM text or choose a file.") {
+      const pasted = $(textId).value.trim();
+      if (pasted) return textToBase64(pasted);
+      if (!$(fileId).files?.[0]) {
+        if (required) throw new Error(missingMessage);
+        return null;
+      }
+      return fileBase64(fileId);
+    }
+
+    function bindCertificateSources(textId, fileId, onTextInput = null) {
+      const text = $(textId);
+      const file = $(fileId);
+      file.addEventListener("change", () => {
+        if (!file.files?.length) return;
+        text.value = "";
+        onTextInput?.();
+      });
+      text.addEventListener("input", () => {
+        if (text.value.trim()) file.value = "";
+        onTextInput?.();
+      });
+    }
+
+    function showIssuerResult(result) {
+      const output = $("issuer-analysis-output");
+      output.textContent = JSON.stringify(result, null, 2);
+      output.classList.remove("hidden");
+    }
+
+    function showIssuerError(error, localStatusId = null) {
+      const message = error instanceof Error ? error.message : String(error);
+      const status = $("issuer-setup-status");
+      if (message === "Production setup requires the offline Root CA certificate.") {
+        const rootStatus = $("issuer-production-root-status");
+        rootStatus.textContent = "Import the Root CA certificate before provisioning a Production issuer";
+        rootStatus.className = "status-message status-error";
+        if (localStatusId) {
+          const localStatus = $(localStatusId);
+          localStatus.textContent = "";
+          localStatus.className = "status-message status-neutral hidden";
+        }
+        status.textContent = "";
+        status.className = "status-message status-neutral hidden";
+        return;
+      }
+      if (localStatusId) {
+        status.textContent = "";
+        status.className = "status-message status-neutral hidden";
+        const localStatus = $(localStatusId);
+        localStatus.textContent = message;
+        localStatus.className = "status-message status-error";
+        return;
+      }
+      status.textContent = message;
+      status.className = "status-message status-error";
+    }
+
+    function setIssuerStatus(message, tone = "neutral") {
+      const status = $("issuer-setup-status");
+      status.textContent = message;
+      status.className = `status-message status-${tone}`;
+    }
+
+    async function runIssuerAction(message, action, localStatusId = null) {
+      if (localStatusId) {
+        const localStatus = $(localStatusId);
+        localStatus.textContent = "";
+        localStatus.className = "status-message status-neutral hidden";
+      }
+      setIssuerStatus(message, "pending");
+      try {
+        const result = await action();
+        showIssuerResult(result);
+        await refreshIssuer();
+        return result;
+      } catch (error) {
+        showIssuerError(error, localStatusId);
+        throw error;
+      }
+    }
+
+    async function refreshIssuer() {
+      const status = await api("/setup/issuer");
+      issuerConfigured = Boolean(status.configured);
+      applyIssuerFoundationLock(status.locked);
+      if (!status.ready) {
+        setIssuerStatus(status.detail || "Complete the prerequisite fields.");
+      } else if (status.configured) {
+        const issuer = status.issuer || {};
+        setIssuerStatus(
+          `Active: ${issuer.subject || "Sub CA"} · ${issuer.key_backend || status.backend}`
+          + (issuer.not_after ? ` · valid until ${issuer.not_after}` : ""),
+          "success",
+        );
+        $("issuer-mode-actions").classList.add("hidden");
+        for (const panelId of issuerPanels) $(panelId).classList.add("hidden");
+      } else if (status.pending?.length) {
+        setIssuerStatus(
+          `Pending offline signature for ${status.pending[0].subject}. Copy the CSR, then paste the signed certificate.`,
+        );
+
+        $("issuer-request-csr").value = status.pending[0].csr_pem || "";
+        $("issuer-mode-actions").classList.add("hidden");
+        showIssuerPanel("issuer-new-panel");
+      } else {
+        setIssuerStatus("Choose how to provision the initial issuing Sub CA.");
+        $("issuer-mode-actions").classList.remove("hidden");
+      }
+      updateFinalizeAvailability();
+      return status;
+    }
+
+    $("issuer-new-mode").addEventListener("click", () => showIssuerPanel("issuer-new-panel"));
+    $("issuer-existing-mode").addEventListener("click", () => showIssuerPanel("issuer-existing-panel"));
+    $("issuer-file-mode").addEventListener("click", () => showIssuerPanel("issuer-file-panel"));
+    $("issuer-dkek-mode").addEventListener("click", () => showIssuerPanel("issuer-dkek-panel"));
+    $("issuer-lab-mode").addEventListener("click", () => showIssuerPanel("issuer-lab-panel"));
+
+    $("issuer-new-create").addEventListener("click", async () => {
+      try {
+        await saveIssuerPrerequisites();
+        const result = await runIssuerAction(
+          "Generating the Sub CA key and request…",
+          () => api("/setup/issuer/request", {
+          method: "POST",
+          body: JSON.stringify({
+            common_name: $("issuer-new-cn").value,
+            allowed_profiles: issuerProfiles("issuer-new-panel"),
+            algorithm: $("issuer-new-algorithm").value,
+            ...(selectedHsmBackend() === "pkcs11" ? {
+              user_pin: $("issuer-new-pin").value || null,
+            } : {}),
+            reason: $("issuer-new-reason").value,
+            confirmation: "CREATE SUBCA",
+          }),
+        }),
+          "issuer-request-status",
+        );
+        $("issuer-request-csr").value = result.csr_pem || "";
+      } catch (error) {
+        showIssuerError(error, "issuer-request-status");
+      }
+    });
+
+    $("issuer-request-copy").addEventListener("click", async () => {
+      try {
+        const field = $("issuer-request-csr");
+        if (!field.value.trim()) throw new Error("Create the CSR first.");
+        field.focus();
+        field.select();
+        await navigator.clipboard.writeText(field.value);
+        setIssuerStatus("CSR copied to the clipboard.");
+      } catch (error) {
+        const field = $("issuer-request-csr");
+        field.focus();
+        field.select();
+        showIssuerError(new Error(
+          `${error.message} The CSR is selected; press Ctrl+C or Cmd+C.`,
+        ));
+      }
+    });
+
+    document.querySelectorAll("[data-copy-command]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const command = $(button.dataset.copyCommand);
+        const originalText = button.textContent;
+        try {
+          await navigator.clipboard.writeText(command.textContent);
+          button.textContent = button.dataset.copySuccess || "Command copied";
+          window.setTimeout(() => { button.textContent = originalText; }, 1800);
+        } catch (error) {
+          command.focus();
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(command);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          button.textContent = `${error.message} Select and copy manually`;
+        }
+      });
+    });
+
+    $("issuer-response-import").addEventListener("click", async () => {
+      try {
+        const certificatePem = await certificateInputPem(
+          "issuer-response-cert",
+          "issuer-response-cert-file",
+          true,
+          "Paste the signed Sub CA certificate PEM or choose a certificate file.",
+        );
+        await runIssuerAction("Verifying and activating the signed Sub CA certificate…", () =>
+          api("/setup/issuer/response/import", {
+            method: "POST",
+            body: JSON.stringify({
+              certificate_pem: certificatePem,
+              ...(selectedHsmBackend() === "pkcs11" ? {
+                user_pin: $("issuer-response-pin").value || null,
+              } : {}),
+              reason: $("issuer-response-reason").value,
+              confirmation: "ACTIVATE SUBCA",
+            }),
+          }),
+          "issuer-response-status",
+        );
+      } catch (error) {
+        showIssuerError(error, "issuer-response-status");
+      }
+    });
+
+    async function crlMigrationPayload(prefix) {
+      const state = $(`${prefix}-crl-state`).value;
+      return {
+        prior_crl_state: state,
+        crl_b64: state === "crl"
+          ? await textOrFileBase64(
+            `${prefix}-crl-pem`,
+            `${prefix}-crl-file`,
+            true,
+            "Paste the latest complete CRL PEM or choose a CRL file.",
+          )
+          : null,
+        confirm_never_issued_crl: state === "never_issued_crl",
+      };
+    }
+
+    function updateCrlMigrationFields(prefix) {
+      const hasCrl = $(`${prefix}-crl-state`).value === "crl";
+      const fileField = $(`${prefix}-crl-file-field`);
+      const pemField = $(`${prefix}-crl-pem-field`);
+      fileField.classList.toggle("hidden", !hasCrl);
+      pemField.classList.toggle("hidden", !hasCrl);
+      fileField.querySelector("input").disabled = !hasCrl;
+      pemField.querySelector("textarea").disabled = !hasCrl;
+      if (!hasCrl) {
+        fileField.querySelector("input").value = "";
+        pemField.querySelector("textarea").value = "";
+      }
+    }
+
+    async function existingPayload(commit) {
+      const isHsm = selectedHsmBackend() === "pkcs11";
+      const hsmKey = isHsm ? selectedIssuerExistingHsmKey() : null;
+      const keyRef = isHsm ? hsmKeyReference(hsmKey) : $("issuer-existing-ref").value;
+      const algorithm = isHsm ? hsmKeyAlgorithm(hsmKey) : $("issuer-existing-algorithm").value;
+      const userPin = isHsm ? $("issuer-existing-hsm-pin").value.trim() : null;
+      if (isHsm && (!hsmKey || !keyRef || !algorithm)) {
+        throw new Error("List the HSM keys and select a supported private key.");
+      }
+      if (isHsm && !userPin) {
+        throw new Error("Enter the HSM User PIN before analyzing or importing the selected key.");
+      }
+      return {
+        key_ref: keyRef,
+        certificate_pem: await certificateInputPem(
+          "issuer-existing-cert",
+          "issuer-existing-cert-file",
+          true,
+          "Paste the Sub CA certificate PEM or choose a certificate file.",
+        ),
+        allowed_profiles: issuerProfiles("issuer-existing-panel"),
+        algorithm,
+        user_pin: userPin,
+        ...(await crlMigrationPayload("issuer-existing")),
+        ...(commit ? {
+          reason: $("issuer-existing-reason").value,
+          confirmation: "IMPORT EXISTING SUBCA",
+        } : {}),
+      };
+    }
+
+    $("issuer-existing-analyze").addEventListener("click", async () => {
+      try {
+        await saveIssuerPrerequisites();
+        const payload = await existingPayload(false);
+        await runIssuerAction("Verifying the existing key and certificate…", () =>
+          api("/setup/issuer/existing-key/analyze", {
+            method: "POST", body: JSON.stringify(payload),
+          }),
+          "issuer-existing-status",
+        );
+      } catch (error) {
+        showIssuerError(error, "issuer-existing-status");
+      }
+    });
+
+    $("issuer-existing-commit").addEventListener("click", async () => {
+      try {
+        await saveIssuerPrerequisites();
+        const payload = await existingPayload(true);
+        await runIssuerAction("Importing and activating the existing Sub CA…", () =>
+          api("/setup/issuer/existing-key/commit", {
+            method: "POST", body: JSON.stringify(payload),
+          }),
+          "issuer-existing-status",
+        );
+      } catch (error) {
+        showIssuerError(error, "issuer-existing-status");
+      }
+    });
+
+    async function fileImportPayload(commit) {
+      return {
+        bundle_b64: await bundleInputBase64(),
+        private_key_b64: await fileBase64("issuer-file-key", false),
+        password: $("issuer-file-password").value || null,
+        key_label: $("issuer-file-label").value,
+        allowed_profiles: issuerProfiles("issuer-file-panel"),
+        ...(selectedHsmBackend() === "pkcs11" ? {
+          user_pin: $("issuer-file-pin").value || null,
+        } : {}),
+        ...(await crlMigrationPayload("issuer-file")),
+        ...(commit ? {
+          reason: $("issuer-file-reason").value,
+          confirmation: "IMPORT SUBCA KEY",
+        } : {}),
+      };
+    }
+
+    $("issuer-file-analyze").addEventListener("click", async () => {
+      try {
+        await saveIssuerPrerequisites();
+        const payload = await fileImportPayload(false);
+        await runIssuerAction("Analyzing the Sub CA bundle…", () =>
+          api("/setup/issuer/file/analyze", {
+            method: "POST", body: JSON.stringify(payload),
+          }),
+          "issuer-file-status",
+        );
+      } catch (error) {
+        showIssuerError(error, "issuer-file-status");
+      }
+    });
+
+    $("issuer-file-commit").addEventListener("click", async () => {
+      try {
+        await saveIssuerPrerequisites();
+        const payload = await fileImportPayload(true);
+        await runIssuerAction("Importing the Sub CA private key…", () =>
+          api("/setup/issuer/file/commit", {
+            method: "POST", body: JSON.stringify(payload),
+          }),
+          "issuer-file-status",
+        );
+      } catch (error) {
+        showIssuerError(error, "issuer-file-status");
+      }
+    });
+
+    async function dkekPayload(commit) {
+      return {
+        wrapped_key_b64: await fileBase64("issuer-dkek-wrapped"),
+        key_reference: $("issuer-dkek-reference").value,
+        certificate_pem: await certificateInputPem(
+          "issuer-dkek-cert",
+          "issuer-dkek-cert-file",
+          true,
+          "Paste the Sub CA certificate PEM or choose a certificate file.",
+        ),
+        allowed_profiles: issuerProfiles("issuer-dkek-panel"),
+        user_pin: $("issuer-dkek-pin").value || null,
+        ...(await crlMigrationPayload("issuer-dkek")),
+        ...(commit ? {
+          reason: $("issuer-dkek-reason").value,
+          confirmation: "RESTORE SUBCA KEY",
+        } : {}),
+      };
+    }
+
+    $("issuer-dkek-analyze").addEventListener("click", async () => {
+      try {
+        await saveIssuerPrerequisites();
+        const payload = await dkekPayload(false);
+        await runIssuerAction("Analyzing the DKEK recovery material…", () =>
+          api("/setup/issuer/dkek/analyze", {
+            method: "POST", body: JSON.stringify(payload),
+          }),
+          "issuer-dkek-status",
+        );
+      } catch (error) {
+        showIssuerError(error, "issuer-dkek-status");
+      }
+    });
+
+    $("issuer-dkek-restore").addEventListener("click", async () => {
+      try {
+        await saveIssuerPrerequisites();
+        const payload = await dkekPayload(true);
+        await runIssuerAction("Restoring and activating the SmartCard-HSM key…", () =>
+          api("/setup/issuer/dkek/restore", {
+            method: "POST", body: JSON.stringify(payload),
+          }),
+          "issuer-dkek-status",
+        );
+      } catch (error) {
+        showIssuerError(error, "issuer-dkek-status");
+      }
+    });
+
+    $("issuer-lab-create").addEventListener("click", async () => {
+      try {
+        await saveIssuerPrerequisites();
+        await runIssuerAction("Creating the local Test/Lab Root and Sub CA…", () =>
+          api("/setup/issuer/lab", {
+            method: "POST",
+            body: JSON.stringify({
+              reason: $("issuer-lab-reason").value,
+              confirmation: "CREATE LAB CA",
+            }),
+          }));
+      } catch (error) {
+        showIssuerError(error);
+      }
+    });
+
+    $("issuer-reset").addEventListener("click", async () => {
+      try {
+        await runIssuerAction("Cleaning up the unfinished issuer…", () =>
+          api("/setup/issuer/reset", {
+            method: "POST",
+            body: JSON.stringify({
+              user_pin: $("issuer-reset-pin").value || null,
+              reason: $("issuer-reset-reason").value,
+              confirmation: "RESET ISSUER",
+            }),
+          }));
+        $("issuer-mode-actions").classList.remove("hidden");
+        showIssuerPanel(null);
+      } catch (error) {
+        showIssuerError(error);
+      }
+    });
+
+    async function refresh() {
+      const [state, pre] = await Promise.all([api("/setup/state"), api("/setup/preflight")]);
+      if (state.app_version) {
+        document.querySelectorAll("[data-app-version]").forEach((target) => {
+          target.textContent = `Version ${state.app_version}`;
+        });
+      }
+      $("preflight-output").textContent = JSON.stringify(pre, null, 2);
+      if (pre.pkcs11_lib && !$("pkcs11-lib").value) {
+        $("pkcs11-lib").value = pre.pkcs11_lib;
+      }
+      if (state.hsm) {
+        const isCloudBackend = ["aws_kms", "azure_key_vault"].includes(state.hsm.backend);
+        const locationRadio = document.querySelector(
+          `input[name="key-storage-location"][value="${isCloudBackend ? "cloud" : "local"}"]`,
+        );
+        if (locationRadio) locationRadio.checked = true;
+        const hsmRadio = document.querySelector(
+          `input[name=${isCloudBackend ? "cloud-hsm-backend" : "local-hsm-backend"}][value="${state.hsm.backend}"]`,
+        );
+        if (hsmRadio) hsmRadio.checked = true;
+        cloudHsmTested = Boolean(state.hsm.connection_tested);
+        pkcs11HsmReady = Boolean(state.hsm.ready);
+        pkcs11HsmMode = state.hsm.readiness?.mode || null;
+        pkcs11DkekMode = state.hsm.readiness?.dkek_mode || null;
+        pkcs11TokenInitialized = Boolean(state.hsm.ready);
+        pkcs11TokenSerial = state.hsm.readiness?.token_serial || null;
+        if (pkcs11HsmMode === "initialized") {
+          const newMode = document.querySelector('input[name="pkcs11-setup-mode"][value="new"]');
+          if (newMode) newMode.checked = true;
+          if (pkcs11DkekMode === "disabled") {
+            const disabledDkek = document.querySelector('input[name="pkcs11-dkek-migration"][value="disabled"]');
+            if (disabledDkek) disabledDkek.checked = true;
+          }
+        }
+        if (state.hsm.pkcs11_lib) $("pkcs11-lib").value = state.hsm.pkcs11_lib;
+        if (state.hsm.token_label) $("pkcs11-token-label").value = state.hsm.token_label;
+        if (state.hsm.reader) $("pkcs11-reader").value = state.hsm.reader;
+        if (state.hsm.aws_region) $("aws-region").value = state.hsm.aws_region;
+        if (state.hsm.azure_vault_url) $("azure-vault-url").value = state.hsm.azure_vault_url;
+        if (state.hsm.azure_key_protection) $("azure-key-protection").value = state.hsm.azure_key_protection;
+      }
+      updateHsmFields();
+      if (state.hsm?.service_key_backend) {
+        $("service-key-backend").value = state.hsm.service_key_backend;
+      }
+      if (selectedHsmBackend() === "pkcs11") {
+        setHsmStatus(
+          pkcs11HsmReady
+            ? pkcs11DkekMode === "disabled"
+              ? "HSM ready with DKEK disabled. This Sub CA key cannot be backed up, recovered, or migrated to another HSM."
+              : `HSM ready in ${pkcs11HsmMode || "verified"} mode; DKEK KCV ${state.hsm?.readiness?.kcv}.`
+            : pre.pkcs11_lib
+              ? `Detected OpenSC module: ${pre.pkcs11_lib}. Probe and prepare the token.`
+              : "No OpenSC module detected. Install OpenSC or paste the module path for smartcard mode.",
+          pkcs11HsmReady ? "success" : "neutral",
+        );
+      } else if (state.hsm?.credentials_configured && cloudHsmTested) {
+        $("hsm-cloud-status").textContent = "Cloud connection verified. Credentials are saved; leave credential fields blank to keep them.";
+      } else if (state.hsm?.credentials_configured) {
+        $("hsm-cloud-status").textContent = "Cloud credentials are saved, but the current configuration must be checked again.";
+      }
+      if (state.install_type) {
+        const radio = document.querySelector(`input[name=install-type][value="${state.install_type}"]`);
+        if (radio) radio.checked = true;
+      }
+      updateInstallTypeFields();
+      applyGovernanceState(state);
+      applyTotpPolicyState(state);
+      const hasSavedServiceUrls = applyServiceUrlsState(state);
+      applyDeploymentState(state, hasSavedServiceUrls);
+      syncTotpDefaultsForInstallType();
+      updateInstallTypeFields();
+      applyIssuerFoundationLock(state.issuer_locked);
+      const issuerState = await refreshIssuer();
+      if (state.issuer_completion_only && !issuerState.configured) {
+        document.querySelector("#wizard-panel > .preflight-card")?.classList.add("hidden");
+        document.querySelectorAll("#wizard-panel > .setup-section").forEach((section) => {
+          section.classList.toggle("hidden", section.id !== "issuer-fieldset");
+        });
+        document.querySelector(".actions-bar")?.classList.add("hidden");
+        $("issuer-reset-panel").classList.add("hidden");
+        setIssuerStatus(
+          "This upgraded installation has no persisted issuer. Complete the one-time Issuing CA step; the service will start automatically afterward.",
+        );
+      } else if (state.complete) {
+        $("wizard-status").textContent = "Setup complete. Starting service…";
+        $("finalize-button").disabled = true;
+      }
+    }
+
+    $("unlock-button").addEventListener("click", async () => {
+      try {
+        const result = await api("/setup/unlock", {
+          method: "POST",
+          body: JSON.stringify({ token: $("token-input").value }),
+        });
+        csrf = result.csrf_token;
+        sessionStorage.setItem("myownca_setup_csrf", csrf);
+        $("unlock-panel").classList.add("hidden");
+        $("wizard-panel").classList.remove("hidden");
+        await refresh();
+      } catch (err) {
+        $("unlock-error").textContent = err.message;
+      }
+    });
+
+    bindCertificateSources("root-cert-input", "root-cert-file", clearRootCertificateVerification);
+
+    $("root-cert-verify").addEventListener("click", async () => {
+      const button = $("root-cert-verify");
+      clearRootCertificateVerification();
+      button.disabled = true;
+      try {
+        const result = await api("/setup/root-certificate/verify", {
+          method: "POST",
+          body: JSON.stringify({
+            pem: await certificateInputPem(
+              "root-cert-input",
+              "root-cert-file",
+              true,
+              "Paste the Root CA certificate PEM or choose a certificate file.",
+            ),
+          }),
+        });
+        showRootCertificateVerification(result);
+      } catch (err) {
+        const status = $("root-cert-verify-status");
+        status.textContent = err.message;
+        status.className = "status-message status-error";
+      } finally {
+        button.disabled = issuerLocked;
+      }
+    });
+
+    document.querySelectorAll('input[name=install-type]').forEach((radio) => {
+      radio.addEventListener("change", async () => {
+        if (radio.value === "lab") clearRootCertificateInput();
+        updateInstallTypeFields();
+        syncTotpDefaultsForInstallType();
+        if (!issuerConfigured && !issuerLocked) {
+          setIssuerStatus("Choose how to provision the initial issuing Sub CA.");
+        }
+        $("finalize-button").disabled = true;
+        $("wizard-status").textContent = "Saving install type…";
+        try {
+          const state = await api("/setup/install-type", { method: "POST", body: JSON.stringify({ value: radio.value }) });
+          applyGovernanceState(state);
+        } catch (err) {
+          await refresh().catch(() => {});
+          $("wizard-status").textContent = err.message;
+        }
+      });
+    });
+
+    document.querySelectorAll('input[name="governance-mode"]').forEach((radio) => {
+      radio.addEventListener("change", async () => {
+        $("finalize-button").disabled = true;
+        $("wizard-status").textContent = "Saving governance mode…";
+        try {
+          const state = await api("/setup/governance-mode", {
+            method: "POST",
+            body: JSON.stringify({ value: radio.value }),
+          });
+          applyGovernanceState(state);
+        } catch (err) {
+          await refresh().catch(() => {});
+          $("wizard-status").textContent = err.message;
+        }
+      });
+    });
+
+    $("include-admin2").addEventListener("change", updateGovernanceFields);
+    $("finalize-pin").addEventListener("input", updateFinalizeAvailability);
+
+    document.querySelectorAll('input[name="key-storage-location"], input[name="local-hsm-backend"], input[name="cloud-hsm-backend"]').forEach((radio) => {
+      radio.addEventListener("change", () => {
+        cloudHsmTested = false;
+        if (radio.name === "key-storage-location" || selectedHsmBackend() !== "pkcs11") {
+          clearPkcs11SetupChoices();
+        }
+        updateHsmFields();
+      });
+    });
+
+    [
+      "aws-region", "aws-access-key-id", "aws-secret-access-key", "aws-session-token",
+      "azure-vault-url", "azure-tenant-id", "azure-client-id", "azure-client-secret",
+      "azure-key-protection", "service-key-backend",
+    ].forEach((id) => {
+      $(id).addEventListener("input", invalidateCloudHsmTest);
+      $(id).addEventListener("change", invalidateCloudHsmTest);
+    });
+
+    document.querySelectorAll('input[name="deployment-type"]').forEach((radio) => {
+      radio.addEventListener("change", async () => {
+        applyDeploymentUrlDefaults(radio.value);
+        updateDeploymentFields();
+        try {
+          await saveDeploymentType();
+        } catch (err) {
+          await refresh().catch(() => {});
+          $("wizard-status").textContent = err.message;
+        }
+      });
+    });
+    ["listener-bind-host", "listener-bind-port"].forEach((id) => {
+      $(id).addEventListener("input", updateDeploymentFields);
+      $(id).addEventListener("change", async () => {
+        try {
+          await saveDirectListener();
+        } catch (err) {
+          $("wizard-status").textContent = err.message;
+        }
+      });
+    });
+    ["listener-tls-cert", "listener-tls-key"].forEach((id) => {
+      $(id).addEventListener("input", updateDeploymentFields);
+      $(id).addEventListener("change", async () => {
+        if (!listenerConfigurationReady()) return;
+        try {
+          await saveDeploymentType();
+        } catch (err) {
+          $("wizard-status").textContent = err.message;
+        }
+      });
+    });
+    $("listener-tls-enabled").addEventListener("change", async () => {
+      setPublicUrlProtocol($("listener-tls-enabled").checked ? "https:" : "http:");
+      updateDeploymentFields();
+      if (!listenerConfigurationReady()) return;
+      try {
+        await saveDeploymentType();
+      } catch (err) {
+        $("wizard-status").textContent = err.message;
+      }
+    });
+
+    document.querySelectorAll('input[name=db-kind]').forEach((radio) => {
+      radio.addEventListener("change", () => {
+        $("mariadb-fields").classList.toggle("hidden", radio.value !== "mariadb" || !radio.checked);
+        updateFinalizeAvailability();
+      });
+    });
+
+    ["db-host", "db-port", "db-name", "db-user", "db-password"].forEach((id) => {
+      $(id).addEventListener("input", updateFinalizeAvailability);
+    });
+
+    function dbPayload() {
+      const selected = document.querySelector('input[name=db-kind]:checked');
+      if (!selected) throw new Error("Choose SQLite or MariaDB for the database.");
+      const kind = selected.value;
+      if (kind === "sqlite") return { kind };
+      return {
+        kind,
+        host: $("db-host").value,
+        port: Number($("db-port").value || 3306),
+        name: $("db-name").value,
+        user: $("db-user").value,
+        password: $("db-password").value,
+      };
+    }
+
+    function validateAdminEmail(id) {
+      const input = $(id);
+      const email = input.value.trim().toLowerCase();
+      const parts = email.split("@");
+      const valid =
+        parts.length === 2
+        && parts[0]
+        && parts[1]
+        && parts[1].includes(".")
+        && !/[\s\x00-\x1F]/.test(email);
+      input.setCustomValidity(valid ? "" : "Use an email address like admin@example.com");
+      input.reportValidity();
+      return valid ? email : null;
+    }
+
+    function requireTextInput(id, message) {
+      const input = $(id);
+      const value = input.value.trim();
+      input.setCustomValidity(value ? "" : message);
+      input.reportValidity();
+      return value || null;
+    }
+
+    function validateTemporaryPassword(id, label) {
+      const input = $(id);
+      const valid = input.value.length >= 16;
+      input.setCustomValidity(valid ? "" : `${label} temporary password must contain at least 16 characters`);
+      input.reportValidity();
+      return valid ? input.value : null;
+    }
+
+    ["admin1-id", "admin1-email", "admin1-password", "admin2-id", "admin2-email", "admin2-password"].forEach((id) => {
+      $(id).addEventListener("input", updateFinalizeAvailability);
+    });
+
+    $("db-test-button").addEventListener("click", async () => {
+      $("db-status").textContent = "Testing…";
+      try {
+        await api("/setup/database", { method: "POST", body: JSON.stringify(dbPayload()) });
+        await api("/setup/database/test", { method: "POST" });
+        $("db-status").textContent = "Connection OK";
+      } catch (err) {
+        $("db-status").textContent = err.message;
+      }
+    });
+
+    $("hsm-test-button").addEventListener("click", async () => {
+      cloudHsmTested = false;
+      updateFinalizeAvailability();
+      $("hsm-cloud-status").textContent = "Checking cloud configuration…";
+      try {
+        const result = await api("/setup/hsm/test", {
+          method: "POST",
+          body: JSON.stringify(hsmPayload()),
+        });
+        cloudHsmTested = Boolean(result.ok);
+        $("hsm-cloud-status").textContent = cloudHsmTested
+          ? "Cloud connection verified for the current configuration."
+          : "Cloud configuration check failed.";
+      } catch (err) {
+        cloudHsmTested = false;
+        $("hsm-cloud-status").textContent = err.message;
+      } finally {
+        updateFinalizeAvailability();
+      }
+    });
+
+    document.querySelectorAll('input[name="pkcs11-setup-mode"]').forEach((radio) => {
+      radio.addEventListener("change", () => {
+        updatePkcs11Mode();
+        updateIssuerRequestKeyMode();
+        clearPkcs11AdoptStatus();
+        clearPkcs11InitializeStatus();
+        clearPkcs11ShareStatus();
+        clearPkcs11ImportStatus();
+      });
+    });
+
+    document.querySelectorAll('input[name="pkcs11-dkek-migration"]').forEach((radio) => {
+      radio.addEventListener("change", () => {
+        updatePkcs11Mode();
+        clearPkcs11InitializeStatus();
+        clearPkcs11ShareStatus();
+        clearPkcs11ImportStatus();
+      });
+    });
+
+    ["pkcs11-new-dkek-count", "pkcs11-recovery-dkek-count"].forEach((id) => {
+      $(id).addEventListener("change", (event) => {
+        const count = normalizeDkekShareCount(event.currentTarget);
+        if (id === "pkcs11-new-dkek-count") {
+          renderPkcs11ShareRows(count);
+          clearPkcs11ShareStatus();
+        }
+      });
+    });
+
+    ["pkcs11-lib", "pkcs11-token-label", "pkcs11-reader"].forEach((id) => {
+      $(id).addEventListener("input", () => {
+        pkcs11HsmReady = false;
+        pkcs11HsmMode = null;
+        pkcs11DkekMode = null;
+        pkcs11TokenInitialized = false;
+        pkcs11TokenSerial = null;
+        pkcs11InitializationBlockedByKeys = false;
+        clearPkcs11ProbeStatus();
+        clearPkcs11AdoptStatus();
+        clearPkcs11InitializeStatus();
+        clearPkcs11ShareStatus();
+        clearPkcs11ImportStatus();
+        setPkcs11Keys([]);
+        updateFinalizeAvailability();
+      });
+    });
+
+    $("pkcs11-probe-button").addEventListener("click", async () => {
+      setPkcs11ProbeStatus("Probing the local token…", "pending");
+      try {
+        const result = await api("/setup/hsm/test", {
+          method: "POST",
+          body: JSON.stringify({
+            ...hsmPayload(),
+            user_pin: $("pkcs11-probe-pin").value || null,
+          }),
+        });
+        applyPkcs11ProbeResult(result);
+        setPkcs11ProbeStatus(
+          `Token ${result.label || "unlabelled"}; initialized: ${result.initialized}; `
+          + `keys: ${result.key_count ?? "PIN required"}; DKEK: ${pkcs11DkekSummary(result)}.`,
+          result.initialized ? "success" : "neutral",
+        );
+      } catch (err) {
+        setPkcs11ProbeStatus(err.message, "error");
+      }
+    });
+
+    $("issuer-existing-hsm-key").addEventListener("change", updateIssuerExistingHsmDetails);
+
+    $("issuer-existing-hsm-list").addEventListener("click", async () => {
+      const pin = $("issuer-existing-hsm-pin").value.trim();
+      if (!pin) {
+        setIssuerExistingHsmStatus("Enter the HSM User PIN to list private keys.", "error");
+        $("issuer-existing-hsm-pin").focus();
+        return;
+      }
+      setIssuerExistingHsmStatus("Listing private keys on the selected HSM…", "pending");
+      try {
+        const result = await api("/setup/hsm/test", {
+          method: "POST",
+          body: JSON.stringify({
+            ...hsmPayload(),
+            user_pin: pin,
+          }),
+        });
+        applyPkcs11ProbeResult(result);
+        if (!result.initialized) {
+          throw new Error("The selected HSM is not initialized.");
+        }
+        if (!result.pin?.verified) {
+          throw new Error("HSM User PIN verification is required to list private keys.");
+        }
+        const keys = Array.isArray(result.keys) ? result.keys : [];
+        const supported = keys.filter((key) => hsmKeyAlgorithm(key));
+        setIssuerExistingHsmStatus(
+          keys.length
+            ? `${supported.length} supported private key(s) found; choose one below.`
+              + (supported.length !== keys.length ? ` ${keys.length - supported.length} unsupported key(s) disabled.` : "")
+            : "No private keys were found on the selected HSM.",
+          supported.length ? "success" : "neutral",
+        );
+      } catch (err) {
+        setIssuerExistingHsmStatus(err.message, "error");
+      }
+    });
+
+    $("pkcs11-adopt-button").addEventListener("click", async () => {
+      setPkcs11AdoptStatus("Verifying the existing HSM…", "pending");
+      try {
+        await api("/setup/hsm", {
+          method: "POST",
+          body: JSON.stringify(hsmPayload()),
+        });
+        const result = await api("/setup/hsm/adopt", {
+          method: "POST",
+          body: JSON.stringify({ user_pin: $("pkcs11-adopt-pin").value }),
+        });
+        pkcs11HsmReady = true;
+        pkcs11HsmMode = "existing";
+        pkcs11DkekMode = "shares";
+        pkcs11TokenInitialized = true;
+        pkcs11TokenSerial = result.token_serial || null;
+        pkcs11InitializationBlockedByKeys = false;
+        setPkcs11Keys(result.keys || []);
+        setPkcs11AdoptStatus(
+          `Existing HSM adopted; ${result.key_count} key(s), token ${result.token_serial}, KCV ${result.kcv}.`,
+          "success",
+        );
+        updateFinalizeAvailability();
+      } catch (err) {
+        pkcs11HsmReady = false;
+        pkcs11HsmMode = null;
+        pkcs11DkekMode = null;
+        setPkcs11AdoptStatus(err.message, "error");
+      }
+    });
+
+    $("pkcs11-share-create-button").addEventListener("click", async () => {
+      const button = $("pkcs11-share-create-button");
+      setPkcs11ShareStatus("Generating the complete DKEK share archive…", "pending");
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      try {
+        await api("/setup/hsm", {
+          method: "POST",
+          body: JSON.stringify(hsmPayload()),
+        });
+        const count = selectedPkcs11DkekShares();
+        renderPkcs11ShareRows(count);
+        const shares = collectPkcs11ShareSpecs(count);
+        const response = await fetch("/setup/hsm/dkek/shares", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-csrf-token": csrf,
+          },
+          body: JSON.stringify({
+            shares,
+          }),
+        });
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(apiErrorMessage(body, response.statusText));
+        }
+        const archiveUrl = URL.createObjectURL(await response.blob());
+        const link = document.createElement("a");
+        link.href = archiveUrl;
+        link.download = "dkek-shares.zip";
+        document.body.append(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
+        $("pkcs11-share-rows")
+          .querySelectorAll('[data-share-field="password"]')
+          .forEach((input) => { input.value = ""; });
+        setPkcs11ShareStatus(
+          `${count} encrypted DKEK shares downloaded in dkek-shares.zip. Extract and distribute them separately, store each password through a separate channel, then delete the combined archive.`,
+          "success",
+        );
+      } catch (err) {
+        setPkcs11ShareStatus(err.message, "error");
+      } finally {
+        button.disabled = false;
+        button.setAttribute("aria-busy", "false");
+      }
+    });
+
+    $("pkcs11-initialize-button").addEventListener("click", async () => {
+      const mode = selectedPkcs11SetupMode();
+      const eraseExistingKeys = mode !== "existing"
+        && (pkcs11Keys.length > 0 || pkcs11InitializationBlockedByKeys);
+      if (!validatePkcs11Initialization()) return;
+      if (eraseExistingKeys) {
+        const labels = pkcs11Keys.map((key) => key.label).join(", ");
+        const confirmed = window.confirm(
+          `Erase ${pkcs11Keys.length} key(s) from token ${pkcs11TokenSerial || "selected HSM"} and initialize it?\n\n${labels}`,
+        );
+        if (!confirmed) {
+          setPkcs11InitializeStatus("HSM erase and initialization cancelled.", "neutral");
+          return;
+        }
+      }
+      setPkcs11InitializeStatus(
+        eraseExistingKeys
+          ? "Erasing and initializing the selected HSM…"
+          : "Initializing the selected HSM…",
+        "pending",
+      );
+      try {
+        await api("/setup/hsm", {
+          method: "POST",
+          body: JSON.stringify(hsmPayload()),
+        });
+        const result = await api("/setup/hsm/initialize", {
+          method: "POST",
+          body: JSON.stringify({
+            mode,
+            so_pin: $("pkcs11-so-pin").value,
+            user_pin: $("pkcs11-new-pin").value,
+            current_user_pin: $("pkcs11-current-pin").value || null,
+            label: $("pkcs11-token-label").value,
+            dkek_shares: selectedPkcs11DkekShares(),
+            erase_existing_keys: eraseExistingKeys,
+            reason: $("pkcs11-init-reason").value,
+            confirmation: $("pkcs11-init-confirmation").value,
+          }),
+        });
+        pkcs11HsmReady = Boolean(result.ready);
+        pkcs11HsmMode = result.ready ? "initialized" : null;
+        pkcs11DkekMode = result.dkek_mode || null;
+        pkcs11TokenInitialized = true;
+        pkcs11TokenSerial = result.token_serial || null;
+        setPkcs11Keys([]);
+        setPkcs11InitializeStatus(
+          result.dkek_mode === "disabled"
+            ? "HSM initialized with DKEK disabled. This Sub CA key cannot be backed up, recovered, or migrated to another HSM."
+            : `HSM initialized for ${result.dkek_shares} N-of-N shares`
+              + (result.erased_key_count
+                ? ` after erasing ${result.erased_key_count} key(s)`
+                : "")
+              + ". Upload every share below.",
+          "success",
+        );
+        $("pkcs11-so-pin").value = "";
+        $("pkcs11-new-pin").value = "";
+        $("pkcs11-current-pin").value = "";
+        $("pkcs11-init-confirmation").value = "";
+        updateFinalizeAvailability();
+      } catch (err) {
+        if (err.message.includes("Initialization is blocked because the selected HSM contains keys")) {
+          pkcs11InitializationBlockedByKeys = true;
+          pkcs11TokenInitialized = true;
+          updatePkcs11InitializeAction();
+          setPkcs11InitializeStatus(
+            "Initialization is blocked because the selected HSM contains keys; retry to proceed with erasure.",
+            "error",
+          );
+        } else {
+          setPkcs11InitializeStatus(err.message, "error");
+        }
+      }
+    });
+
+    $("pkcs11-import-button").addEventListener("click", async () => {
+      setPkcs11ImportStatus("Importing and verifying all DKEK shares…", "pending");
+      try {
+        const files = [...($("pkcs11-import-shares").files || [])];
+        if (!files.length) throw new Error("Select all N DKEK share files.");
+        const passwords = [...document.querySelectorAll(
+          "#pkcs11-import-share-rows input[data-dkek-password]",
+        )].map((input) => input.value);
+        if (passwords.length !== files.length || passwords.some((value) => !value)) {
+          throw new Error("Provide one non-empty password per selected share.");
+        }
+        const shares = [];
+        for (let index = 0; index < files.length; index += 1) {
+          shares.push({
+            filename: files[index].name,
+            data_b64: bytesToBase64(new Uint8Array(await files[index].arrayBuffer())),
+            password: passwords[index],
+          });
+        }
+        const result = await api("/setup/hsm/dkek/import", {
+          method: "POST",
+          body: JSON.stringify({
+            shares,
+            user_pin: $("pkcs11-import-pin").value,
+          }),
+        });
+        pkcs11HsmReady = true;
+        pkcs11HsmMode = "initialized";
+        pkcs11DkekMode = "shares";
+        pkcs11TokenInitialized = true;
+        pkcs11TokenSerial = result.token_serial;
+        setPkcs11Keys([]);
+        setPkcs11ImportStatus(
+          `HSM ready in initialized mode; token ${result.token_serial}, DKEK KCV ${result.kcv}.`,
+          "success",
+        );
+        updateFinalizeAvailability();
+      } catch (err) {
+        pkcs11HsmReady = false;
+        pkcs11HsmMode = null;
+        pkcs11DkekMode = null;
+        setPkcs11ImportStatus(err.message, "error");
+      } finally {
+        document.querySelectorAll("#pkcs11-import-share-rows input[data-dkek-password]")
+          .forEach((input) => { input.value = ""; });
+        $("pkcs11-import-pin").value = "";
+      }
+    });
+
+    function updatePkcs11ImportShareRows() {
+      const files = [...($("pkcs11-import-shares").files || [])];
+      const container = $("pkcs11-import-share-rows");
+      container.replaceChildren();
+      files.forEach((file, index) => {
+        const row = document.createElement("div");
+        row.className = "pkcs11-import-share-row";
+
+        const filename = document.createElement("input");
+        filename.type = "text";
+        filename.value = file.name;
+        filename.readOnly = true;
+        filename.setAttribute("aria-label", `DKEK share ${index + 1} filename`);
+
+        const password = document.createElement("input");
+        password.type = "password";
+        password.autocomplete = "off";
+        password.dataset.dkekPassword = "true";
+        password.setAttribute("aria-label", `DKEK share ${index + 1} password`);
+
+        row.append(filename, password);
+        container.append(row);
+      });
+    }
+
+    $("pkcs11-import-shares").addEventListener("change", updatePkcs11ImportShareRows);
+
+    bindCertificateSources("issuer-response-cert", "issuer-response-cert-file");
+    bindCertificateSources("issuer-existing-cert", "issuer-existing-cert-file");
+    bindCertificateSources("issuer-file-bundle-pem", "issuer-file-bundle");
+    bindCertificateSources("issuer-dkek-cert", "issuer-dkek-cert-file");
+    bindCertificateSources("issuer-existing-crl-pem", "issuer-existing-crl-file");
+    bindCertificateSources("issuer-file-crl-pem", "issuer-file-crl-file");
+    bindCertificateSources("issuer-dkek-crl-pem", "issuer-dkek-crl-file");
+    ["issuer-existing", "issuer-file", "issuer-dkek"].forEach((prefix) => {
+      $(`${prefix}-crl-state`).addEventListener("change", () => updateCrlMigrationFields(prefix));
+      updateCrlMigrationFields(prefix);
+    });
+
+    async function submitConfigSteps() {
+      const governanceMode = selectedGovernanceMode();
+      if (!governanceMode) {
+        throw new Error("Choose an administrative governance mode before finishing setup.");
+      }
+      if (cloudHsmSelected() && !cloudHsmTested) {
+        throw new Error("Check the current cloud key-storage configuration before finishing setup.");
+      }
+      if (!issuerConfigured) {
+        throw new Error("Provision and activate the issuing Sub CA before finishing setup.");
+      }
+      await api("/setup/governance-mode", {
+        method: "POST",
+        body: JSON.stringify({ value: governanceMode }),
+      });
+      await api("/setup/totp-policy", {
+        method: "POST",
+        body: JSON.stringify({ required_roles: selectedTotpRoles() }),
+      });
+      if (!issuerLocked) {
+        await api("/setup/database", { method: "POST", body: JSON.stringify(dbPayload()) });
+        await api("/setup/hsm", { method: "POST", body: JSON.stringify(hsmPayload()) });
+      }
+      await api("/setup/service-urls", { method: "POST", body: JSON.stringify({
+        admin: $("url-admin").value, superuser: $("url-superuser").value, frontend: $("url-frontend").value,
+      }) });
+      await api("/setup/listener", {
+        method: "POST",
+        body: JSON.stringify(listenerPayload()),
+      });
+      const rootPem = await certificateInputPem("root-cert-input", "root-cert-file", false);
+      if (rootPem && !issuerLocked) {
+        await api("/setup/root-certificate", { method: "POST", body: JSON.stringify({ pem: rootPem }) });
+      }
+      const admin1Id = requireTextInput("admin1-id", "Admin 1 ID is required");
+      const admin1Email = validateAdminEmail("admin1-email");
+      const admin1Password = validateTemporaryPassword("admin1-password", "Admin 1");
+      if (!admin1Id || !admin1Email || !admin1Password) {
+        throw new Error("Provide the first admin ID, a valid email, and a temporary password before finishing setup.");
+      }
+      const admins = {
+        first: { id: admin1Id, email: admin1Email, password: admin1Password },
+      };
+      const includeSecondAdmin = governanceMode === "dual_control" || $("include-admin2").checked;
+      if (includeSecondAdmin) {
+        const context = governanceMode === "dual_control" ? "Dual control" : "Adding a second administrator";
+        const admin2Id = requireTextInput("admin2-id", `Admin 2 ID is required. ${context} needs a complete second account.`);
+        const admin2Email = validateAdminEmail("admin2-email");
+        const admin2Password = validateTemporaryPassword("admin2-password", "Admin 2");
+        const distinctIds = Boolean(admin2Id && admin1Id !== admin2Id);
+        const distinctEmails = Boolean(admin2Email && admin1Email !== admin2Email);
+        $("admin2-id").setCustomValidity(distinctIds ? "" : "Admin 2 must use a different ID");
+        $("admin2-email").setCustomValidity(distinctEmails ? "" : "Admin 2 must use a different email address");
+        if (!distinctIds) $("admin2-id").reportValidity();
+        if (!distinctEmails) $("admin2-email").reportValidity();
+        if (!admin2Id || !admin2Email || !admin2Password || !distinctIds || !distinctEmails) {
+          throw new Error(`${context} requires two distinct administrators with valid IDs, emails, and temporary passwords.`);
+        }
+        admins.second = { id: admin2Id, email: admin2Email, password: admin2Password };
+      }
+      await api("/setup/admins", { method: "POST", body: JSON.stringify(admins) });
+    }
+
+    $("finalize-button").addEventListener("click", async () => {
+      const button = $("finalize-button");
+      if (selectedHsmBackend() === "pkcs11" && !$("finalize-pin").value.trim()) {
+        $("finalize-pin").setCustomValidity("Enter the PKCS#11 User PIN for final key verification before finishing setup.");
+        $("finalize-pin").reportValidity();
+        updateFinalizeAvailability();
+        return;
+      }
+      $("finalize-pin").setCustomValidity("");
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      $("wizard-status").textContent = "Finishing…";
+      try {
+        await submitConfigSteps();
+        await api("/setup/finalize", {
+          method: "POST",
+          body: JSON.stringify({ user_pin: $("finalize-pin").value || null }),
+        });
+        sessionStorage.removeItem("myownca_setup_csrf");
+        showComplete();
+      } catch (err) {
+        updateFinalizeAvailability();
+        $("wizard-status").textContent = err.message;
+      } finally {
+        button.setAttribute("aria-busy", "false");
+      }
+    });
+
+    if (csrf) {
+      $("unlock-panel").classList.add("hidden");
+      $("wizard-panel").classList.remove("hidden");
+      refresh().catch(() => {
+        csrf = null;
+        sessionStorage.removeItem("myownca_setup_csrf");
+        $("wizard-panel").classList.add("hidden");
+        $("unlock-panel").classList.remove("hidden");
+        $("unlock-error").textContent =
+          "The setup session expired or the setup process restarted. Use the new one-time token.";
+      });
+    }
+  </script>
+</body>
+</html>

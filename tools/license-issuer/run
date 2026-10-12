@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+issuer_script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+
+if [ "$#" -eq 0 ]; then
+    set -- --help
+fi
+
+export LICENSE_ISSUER_UID="${LICENSE_ISSUER_UID:-$(id -u)}"
+export LICENSE_ISSUER_GID="${LICENSE_ISSUER_GID:-$(id -g)}"
+
+exec docker compose -f "$issuer_script_dir/compose.yaml" run --rm issuer "$@"

@@ -1,0 +1,108 @@
+<svg viewBox="0 0 1200 960" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ttl dsc">
+<title id="ttl">myOwnCA merged architecture and feature flow</title>
+<desc id="dsc">Web clients call online/app.py, which drives two parallel issuance lanes: an internal CA lane (CAMainService, policy, crypto) that signs through the HSM layer (HSMProxy over a software keystore or a PKCS#11/OpenSC token), and an external lane (service_certs, ACME client) that obtains certificates from public CAs. Issued material is exported and delivered, persisted to the data layer, and the issuing sub-CA is provisioned from an air-gapped offline root via signed transfer bundles. Auth, audit, notifications, comms and licensing are cross-cutting.</desc>
+<style>
+text{font-family:'Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif}
+.th{font-weight:600;font-size:14px;fill:#1f1f1d}
+.ts{font-weight:400;font-size:12px;fill:#5f5e5a}
+.blue{fill:#E6F1FB;stroke:#2f6fb3;stroke-width:.75}
+.gray{fill:#EFEEE7;stroke:#9a988f;stroke-width:.75}
+.region{fill:none;stroke:#b4b2a9;stroke-width:.75;stroke-dasharray:1 6}
+.dash{stroke-dasharray:5 4}
+</style>
+<defs>
+<marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrowGray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#6E6D68" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<rect x="40" y="16" width="15" height="15" rx="3" class="blue"/>
+<text x="62" y="28" class="ts">Pipeline</text>
+<rect x="150" y="16" width="15" height="15" rx="3" class="gray"/>
+<text x="172" y="28" class="ts">Supporting</text>
+<rect x="290" y="16" width="15" height="15" rx="3" fill="none" stroke="#5f5e5a" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="312" y="28" class="ts">External / air-gapped</text>
+
+<rect x="90" y="210" width="380" height="250" rx="10" class="region"/>
+<text x="106" y="230" class="th">Internal CA issuance</text>
+<rect x="620" y="210" width="330" height="320" rx="10" class="region"/>
+<text x="636" y="230" class="th">External / public CA (ACME)</text>
+<rect x="90" y="500" width="430" height="170" rx="10" class="region"/>
+<text x="106" y="520" class="th">Key protection (HSM)</text>
+<rect x="620" y="560" width="330" height="120" rx="10" class="region"/>
+<text x="636" y="580" class="th">Export &amp; delivery</text>
+<rect x="90" y="800" width="860" height="120" rx="10" class="region"/>
+<text x="106" y="820" class="th">Trust hierarchy (air-gapped)</text>
+
+<line x1="600" y1="94" x2="600" y2="124" fill="none" stroke="#185FA5" stroke-width="1.3" marker-end="url(#arrowBlue)"/>
+<line x1="320" y1="149" x2="450" y2="149" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<text x="324" y="142" class="ts">authorize</text>
+<line x1="505" y1="176" x2="312" y2="240" fill="none" stroke="#185FA5" stroke-width="1.3" marker-end="url(#arrowBlue)"/>
+<text x="356" y="200" class="ts">internal CA</text>
+<line x1="700" y1="176" x2="784" y2="240" fill="none" stroke="#185FA5" stroke-width="1.3" marker-end="url(#arrowBlue)"/>
+<text x="715" y="200" class="ts">ACME / import</text>
+
+<line x1="250" y1="294" x2="250" y2="308" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<line x1="392" y1="294" x2="392" y2="394" fill="none" stroke="#185FA5" stroke-width="1.3" marker-end="url(#arrowBlue)"/>
+<text x="400" y="350" class="ts">build</text>
+<line x1="282" y1="446" x2="296" y2="524" fill="none" stroke="#185FA5" stroke-width="1.3" marker-end="url(#arrowBlue)"/>
+<text x="300" y="490" class="ts">sign cert / CRL</text>
+<line x1="248" y1="572" x2="210" y2="596" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<line x1="350" y1="572" x2="408" y2="596" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+
+<line x1="785" y1="294" x2="785" y2="310" fill="none" stroke="#185FA5" stroke-width="1.3" marker-end="url(#arrowBlue)"/>
+<line x1="772" y1="362" x2="772" y2="388" fill="none" stroke="#185FA5" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrowBlue)"/>
+<line x1="800" y1="388" x2="800" y2="362" fill="none" stroke="#185FA5" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrowBlue)"/>
+<text x="812" y="378" class="ts">validate · issue</text>
+
+<polyline points="150,444 60,444 60,730 90,730" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<text x="66" y="700" class="ts">persist</text>
+<polyline points="950,476 975,476 975,730 950,730" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<line x1="785" y1="712" x2="785" y2="640" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<text x="794" y="690" class="ts">issued cert</text>
+<line x1="320" y1="830" x2="300" y2="768" fill="none" stroke="#185FA5" stroke-width="1.1" marker-end="url(#arrowBlue)"/>
+<text x="330" y="800" class="ts">sub-CA + root cert</text>
+
+<line x1="750" y1="135" x2="985" y2="70" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<line x1="750" y1="150" x2="985" y2="126" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<line x1="750" y1="165" x2="985" y2="236" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<line x1="1085" y1="148" x2="1085" y2="160" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+<line x1="915" y1="588" x2="985" y2="192" fill="none" stroke="#6E6D68" stroke-width="1" marker-end="url(#arrowGray)"/>
+
+<line x1="370" y1="850" x2="420" y2="850" fill="none" stroke="#185FA5" stroke-width="1.1" marker-end="url(#arrowBlue)"/>
+<line x1="420" y1="872" x2="370" y2="872" fill="none" stroke="#185FA5" stroke-width="1.1" marker-end="url(#arrowBlue)"/>
+<line x1="580" y1="846" x2="650" y2="846" fill="none" stroke="#185FA5" stroke-width="1.1" stroke-dasharray="5 4" marker-end="url(#arrowBlue)"/>
+<line x1="650" y1="872" x2="580" y2="872" fill="none" stroke="#185FA5" stroke-width="1.1" stroke-dasharray="5 4" marker-end="url(#arrowBlue)"/>
+<line x1="615" y1="812" x2="615" y2="908" fill="none" stroke="#6E6D68" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="615" y="806" class="ts" text-anchor="middle">air gap</text>
+<text x="495" y="906" class="ts" text-anchor="middle">sub-CA CSR out → signed sub-CA cert + root CRL back</text>
+
+<g><rect x="460" y="44" width="280" height="50" rx="6" class="blue"/><text x="600" y="66" class="th" text-anchor="middle">Web clients</text><text x="600" y="84" class="ts" text-anchor="middle">Operator portals · holder page</text></g>
+<g><rect x="120" y="124" width="200" height="50" rx="6" class="gray"/><text x="220" y="146" class="th" text-anchor="middle">ca_auth · RBAC</text><text x="220" y="164" class="ts" text-anchor="middle">Session · role · CSRF</text></g>
+<g><rect x="450" y="124" width="300" height="52" rx="6" class="blue"/><text x="600" y="147" class="th" text-anchor="middle">online/app.py</text><text x="600" y="165" class="ts" text-anchor="middle">FastAPI routes · orchestration</text></g>
+
+<g><rect x="985" y="48" width="200" height="44" rx="6" class="gray"/><text x="1085" y="69" class="th" text-anchor="middle">audit</text><text x="1085" y="85" class="ts" text-anchor="middle">tamper-evident log</text></g>
+<g><rect x="985" y="104" width="200" height="44" rx="6" class="gray"/><text x="1085" y="125" class="th" text-anchor="middle">notifications</text><text x="1085" y="141" class="ts" text-anchor="middle">events + expiry</text></g>
+<g><rect x="985" y="160" width="200" height="44" rx="6" class="gray"/><text x="1085" y="181" class="th" text-anchor="middle">comms</text><text x="1085" y="197" class="ts" text-anchor="middle">email · Slack · webhook</text></g>
+<g><rect x="985" y="216" width="200" height="44" rx="6" class="gray"/><text x="1085" y="237" class="th" text-anchor="middle">licensing</text><text x="1085" y="253" class="ts" text-anchor="middle">caps first issuance</text></g>
+
+<g><rect x="150" y="242" width="260" height="52" rx="6" class="blue"/><text x="280" y="265" class="th" text-anchor="middle">CAMainService</text><text x="280" y="283" class="ts" text-anchor="middle">ca_main lifecycle</text></g>
+<g><rect x="150" y="308" width="200" height="38" rx="6" class="gray"/><text x="250" y="332" class="ts" text-anchor="middle">policy · approval quorum</text></g>
+<g><rect x="150" y="394" width="260" height="52" rx="6" class="blue"/><text x="280" y="417" class="th" text-anchor="middle">crypto</text><text x="280" y="435" class="ts" text-anchor="middle">build X.509 · CRL</text></g>
+
+<g><rect x="655" y="242" width="260" height="52" rx="6" class="blue"/><text x="785" y="265" class="th" text-anchor="middle">service_certs</text><text x="785" y="283" class="ts" text-anchor="middle">ServiceCertService</text></g>
+<g><rect x="655" y="310" width="260" height="52" rx="6" class="blue"/><text x="785" y="333" class="th" text-anchor="middle">ACME client</text><text x="785" y="351" class="ts" text-anchor="middle">HTTP-01 / DNS-01</text></g>
+<g><rect x="655" y="388" width="260" height="52" rx="6" class="blue dash"/><text x="785" y="411" class="th" text-anchor="middle">Public CA</text><text x="785" y="429" class="ts" text-anchor="middle">Let's Encrypt, etc.</text></g>
+<g><rect x="655" y="456" width="260" height="44" rx="6" class="gray"/><text x="785" y="483" class="ts" text-anchor="middle">Import PEM/P12 · external-CA CSR</text></g>
+
+<g><rect x="170" y="524" width="250" height="48" rx="6" class="blue"/><text x="295" y="545" class="th" text-anchor="middle">HSMProxy</text><text x="295" y="561" class="ts" text-anchor="middle">hot-swap · issuer keys · PIN</text></g>
+<g><rect x="110" y="596" width="185" height="48" rx="6" class="gray"/><text x="202" y="617" class="th" text-anchor="middle">Software keystore</text><text x="202" y="633" class="ts" text-anchor="middle">default backend</text></g>
+<g><rect x="315" y="596" width="190" height="48" rx="6" class="gray"/><text x="410" y="617" class="th" text-anchor="middle">PKCS#11 · OpenSC</text><text x="410" y="633" class="ts" text-anchor="middle">SmartCard-HSM / NitroKey</text></g>
+
+<g><rect x="655" y="586" width="260" height="54" rx="6" class="blue"/><text x="785" y="609" class="th" text-anchor="middle">export &amp; delivery</text><text x="785" y="627" class="ts" text-anchor="middle">PKCS12·PEM·DER · claim links · OTP</text></g>
+
+<g><rect x="90" y="712" width="860" height="56" rx="6" class="gray"/><text x="520" y="736" class="th" text-anchor="middle">storage · repositories  →  Database (SQLite / MariaDB)</text><text x="520" y="754" class="ts" text-anchor="middle">requests · certs · CRLs · service certs · audit · server keys</text></g>
+
+<g><rect x="130" y="832" width="240" height="54" rx="6" class="blue"/><text x="250" y="855" class="th" text-anchor="middle">online/ceremony</text><text x="250" y="873" class="ts" text-anchor="middle">active issuer material</text></g>
+<g><rect x="420" y="832" width="160" height="54" rx="6" class="blue dash"/><text x="500" y="855" class="th" text-anchor="middle">transfer bundles</text><text x="500" y="873" class="ts" text-anchor="middle">signed exchange</text></g>
+<g><rect x="650" y="832" width="250" height="54" rx="6" class="blue dash"/><text x="775" y="855" class="th" text-anchor="middle">offline root CA</text><text x="775" y="873" class="ts" text-anchor="middle">air-gapped signer</text></g>
+</svg>

@@ -1,0 +1,73 @@
+name: Package builds
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: root-test-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install application and test dependencies
+        run: python -m pip install -e ".[dev]"
+
+      - name: Static checks
+        run: ruff check src core tests scripts/releases tools/license-issuer/src
+
+      - name: Full suite including MariaDB backup matrix
+        env:
+          MYOWNCA_TEST_MARIADB_ADMIN_URL: mysql+pymysql://root:root-test-password@127.0.0.1:3306/mysql
+        run: pytest -q
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install build frontend
+        run: python -m pip install --upgrade build
+
+      - name: Build application distribution
+        run: python -m build --outdir dist/myownca .
+
+      - name: Build core distribution
+        run: python -m build --outdir dist/myownca-core ./core
+
+      - name: Build independent release tools
+        run: python -m build --wheel --outdir dist/release-tools ./release-tools
+
+      - name: Preserve unsigned build candidates for release review
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-build-candidates
+          path: dist/

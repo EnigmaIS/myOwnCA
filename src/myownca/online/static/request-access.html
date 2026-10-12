@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>myOwnCA — Request access</title>
+  <link rel="stylesheet" href="/app/assets/app.css?v=21">
+  <style>.hp-field { position: absolute; left: -9999px; top: -9999px; }</style>
+</head>
+<body>
+  <header class="hero">
+    <p class="eyebrow">myOwnCA certificate authority</p>
+    <h1>Request access</h1>
+    <p id="access-subtitle">Ask the operators for a user or device certificate.</p>
+  </header>
+
+  <main>
+    <section id="panel-form" class="panel">
+      <h2>Tell us who you are</h2>
+      <p class="hint">Your email must be from a domain approved by the CA operator.</p>
+      <form id="access-form">
+        <label>Your email <input name="email" type="email" required placeholder="you@example.com"></label>
+        <label>Your name <input name="name" placeholder="First Last"></label>
+        <label>Certificate kind
+          <select name="kind">
+            <option value="user">user (a person)</option>
+            <option value="device">device (a machine I'm responsible for)</option>
+          </select>
+        </label>
+        <label>Message for the operators <textarea name="message" rows="3" placeholder="What do you need it for?"></textarea></label>
+        <div class="hp-field" aria-hidden="true">
+          <label>Website <input name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <button type="submit">Send verification code</button>
+      </form>
+      <p id="form-status" class="hint"></p>
+    </section>
+
+    <section id="panel-verify" class="panel hidden">
+      <h2>Check your inbox</h2>
+      <p>We emailed a 6-digit code to confirm the address is yours.</p>
+      <form id="verify-form">
+        <label>Verification code
+          <input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        </label>
+        <button type="submit">Confirm</button>
+      </form>
+      <p id="verify-status" class="hint"></p>
+    </section>
+
+    <section id="panel-done" class="panel hidden">
+      <h2>Request submitted ✓</h2>
+      <p>
+        A Certificate Operator will review your request. If it is approved you'll receive a
+        secure link by email — there is nothing else to do right now.
+      </p>
+    </section>
+  </main>
+
+  <script src="/app/assets/request-access.js"></script>
+</body>
+</html>

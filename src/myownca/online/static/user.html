@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>myOwnCA User Portal</title>
+  <link rel="stylesheet" href="/app/assets/app.css?v=21">
+</head>
+<body>
+  <header class="hero">
+    <img class="portal-brand-logo" src="/branding/logo" alt="myOwnCA logo">
+    <div class="license-identity" data-license-identity hidden aria-live="polite"></div>
+    <p class="eyebrow">User portal</p>
+    <h1>Request, withdraw, and receive certificates</h1>
+    <p id="identity">Loading current user…</p>
+    <nav class="nav">
+      <a class="secondary" href="/app">My portal</a>
+      <button id="logout" type="button" class="secondary">Log out</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="grid">
+      <form id="request-form" class="panel">
+        <h2>Request a certificate</h2>
+        <label>Template
+          <select name="template_id" id="template-select" required></select>
+        </label>
+        <label>Request kind
+          <select name="kind" id="request-kind">
+            <option value="first_issuance">First issuance</option>
+            <option value="renewal">Renewal</option>
+          </select>
+        </label>
+        <label id="renewal-certificate-field" class="hidden">Certificate to renew
+          <select name="renewal_of_serial_number" id="renewal-certificate-select"></select>
+        </label>
+        <p id="renewal-hint" class="hidden">
+          Renewals must be anchored to one of your active issued certificates. The original
+          template is selected automatically.
+        </p>
+        <label id="key-source-field">Key source
+          <select id="key-source">
+            <option value="csr">I have a CSR</option>
+            <option value="server">Generate a key for me (server-side)</option>
+          </select>
+        </label>
+        <div id="csr-fields">
+          <label>CSR PEM
+            <textarea name="csr_pem" rows="12" required placeholder="-----BEGIN CERTIFICATE REQUEST-----"></textarea>
+          </label>
+        </div>
+        <div id="server-key-fields" class="hidden">
+          <label>Common name <input name="common_name" placeholder="host.example.test"></label>
+          <label class="dns-san-field">DNS SANs (comma separated) <input name="dns_names" placeholder="host.example.test, alt.example.test"></label>
+          <label class="email-san-field">Email SANs (comma separated) <input name="email_addresses" type="email" multiple placeholder="alice@example.test"></label>
+          <label>Key algorithm
+            <select name="algorithm">
+              <option value="ecdsa-p256" selected>ECDSA P-256</option>
+              <option value="ecdsa-p384">ECDSA P-384</option>
+              <option value="ecdsa-p521">ECDSA P-521</option>
+              <option value="rsa-2048">RSA 2048</option>
+              <option value="rsa-4096">RSA 4096</option>
+            </select>
+          </label>
+          <p class="hint">
+            The server generates the key pair, builds the CSR, and keeps the key encrypted so
+            you can download encrypted PKCS#12 / PEM+key bundles after issuance. When the
+            certificate is no longer active, its key can be scheduled for the fixed 30-day
+            retirement grace period from the Export dialog.
+          </p>
+        </div>
+        <button type="submit">Submit request</button>
+      </form>
+
+      <section class="panel">
+        <h2>Available templates</h2>
+        <div id="template-table"></div>
+      </section>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <h2>My requests</h2>
+        <button id="refresh" type="button" class="secondary">Refresh</button>
+      </div>
+      <div id="request-table"></div>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <h2>My certificate inventory</h2>
+        <label class="checkbox-row"><input id="certificates-include-archived" type="checkbox"> Include archived</label>
+      </div>
+      <div id="certificate-table"></div>
+    </section>
+
+    <section class="panel" id="my-person-panel">
+      <div class="toolbar">
+        <div>
+          <p class="eyebrow">My holder record</p>
+          <h2>Person</h2>
+        </div>
+        <button id="my-person-refresh" type="button" class="secondary">Refresh</button>
+      </div>
+      <p>Import an existing certificate for your own Person record. The certificate must be issued by the active Sub-CA.</p>
+      <div id="my-person-table"></div>
+    </section>
+
+    <section class="panel" id="my-devices-panel">
+      <div class="toolbar">
+        <div>
+          <p class="eyebrow">Devices I administer</p>
+          <h2>Devices</h2>
+        </div>
+        <div class="actions">
+          <button id="my-device-add-import" type="button">Add device + import</button>
+          <button id="my-devices-refresh" type="button" class="secondary">Refresh</button>
+        </div>
+      </div>
+      <p>You can import for an existing device or create a device and import its certificate atomically.</p>
+      <div id="my-devices-table"></div>
+    </section>
+
+    <section id="account-security" class="panel">
+      <h2>Account security</h2>
+      <p class="account-totp-status">Loading TOTP status…</p>
+      <p>Generate a replacement set of one-time recovery codes. Previous codes are invalidated.</p>
+      <button class="account-recovery-generate" type="button">Regenerate recovery codes</button>
+      <pre class="account-recovery-output hidden"></pre>
+    </section>
+
+    <section class="panel output-panel">
+      <div class="output-heading">
+        <h2>Details</h2>
+        <button id="clear-output" type="button" class="secondary">Clear</button>
+      </div>
+      <pre id="output">Select a request or certificate to inspect it.</pre>
+    </section>
+  </main>
+
+  <script src="/app/assets/app_shared.js?v=22"></script>
+  <script src="/app/assets/leaf-import.js?v=1"></script>
+  <script src="/app/assets/user.js?v=3"></script>
+</body>
+</html>

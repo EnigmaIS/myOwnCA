@@ -1,0 +1,20 @@
+[Unit]
+Description=Independent myOwnCA release integrity verification
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Install the verifier separately from the monitored application environment.
+User=myownca-monitor
+Group=myownca-monitor
+ExecStart=/opt/myownca-verifier/bin/myownca-verify --json --webhook-config /etc/myownca-integrity/webhook.json --status-file /var/lib/myownca-integrity/last-check.json installed --root /opt/myownca/current/lib/python3.12/site-packages --trust /etc/myownca-integrity/release-trust.json
+StateDirectory=myownca-integrity
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

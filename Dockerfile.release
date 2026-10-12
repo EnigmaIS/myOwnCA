@@ -1,0 +1,30 @@
+# Production image: build only from a sealed wheel and a complete, hashed wheelhouse.
+# Sign the resulting registry digest in release.json after testing the image.
+ARG MYOWNCA_BASE_IMAGE=python:3.12-slim
+FROM ${MYOWNCA_BASE_IMAGE}
+
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
+    MYOWNCA_STATE_DIR=/var/lib/myownca \
+    MYOWNCA_SETUP_HOST=0.0.0.0 MYOWNCA_BIND_HOST=0.0.0.0 \
+    MYOWNCA_DATABASE_PATH=/var/lib/myownca/myownca.sqlite3 \
+    MYOWNCA_ONLINE_KEY_DIR=/var/lib/myownca/online-keys \
+    MYOWNCA_SERVICE_KEY_DIR=/var/lib/myownca/service-keys \
+    MYOWNCA_PKCS11_DKEK_SHARE_DIR=/var/lib/myownca/dkek-shares
+
+RUN groupadd --gid 10001 myownca \
+ && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin myownca
+COPY bundle/ /release/
+# Public trust store authenticated by the release operator, never the private key.
+COPY release-trust.json /usr/local/etc/myownca/release-trust.json
+RUN python -m pip --isolated install --no-index --no-compile --only-binary=:all: \
+      --find-links=/release --require-hashes -r /release/requirements.lock \
+ && python -m pip --isolated install --no-index --no-compile --no-deps /release/myownca-*.whl \
+ && python -m pip check \
+ && myownca-verify --json installed --trust /usr/local/etc/myownca/release-trust.json \
+ && mkdir -p /var/lib/myownca \
+ && chown 10001:10001 /var/lib/myownca \
+ && chmod 0700 /var/lib/myownca
+WORKDIR /var/lib/myownca
+VOLUME ["/var/lib/myownca"]
+USER 10001:10001
+ENTRYPOINT ["myownca"]

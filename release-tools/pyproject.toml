@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm>=9.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myownca-release-tools"
+dynamic = ["version"]
+description = "Independent EnigmaIS release verification and offline signing tools"
+license = "LicenseRef-EnigmaIS-Source-Available-1.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = ["cryptography>=43.0.0"]
+
+[project.scripts]
+myownca-verify = "myownca_release.cli:main"
+myownca-release = "myownca_release.sign:main"
+
+[tool.setuptools]
+packages = ["myownca_release"]
+package-dir = {myownca_release = "../src/myownca_release"}
+
+[tool.setuptools_scm]
+root = ".."
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
+
+[tool.setuptools_scm.tag]
+prefix = "v"
+strict = true
+regex = "^(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$"

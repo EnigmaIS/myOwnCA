@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>myOwnCA Auditor Portal</title>
+  <link rel="stylesheet" href="/app/assets/app.css?v=21">
+</head>
+<body>
+  <header class="hero">
+    <img class="portal-brand-logo" src="/branding/logo" alt="myOwnCA logo">
+    <div class="license-identity" data-license-identity hidden aria-live="polite"></div>
+    <p class="eyebrow">Auditor portal</p>
+    <h1>Audit log</h1>
+    <p id="identity">Loading current user…</p>
+    <nav class="nav">
+      <button id="logout" type="button" class="secondary">Log out</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="toolbar">
+        <h2>Audit events</h2>
+        <div class="actions">
+          <label>Category
+            <select id="audit-category">
+              <option value="">all</option>
+              <option value="auth">auth</option>
+              <option value="user">user</option>
+              <option value="permission">permission</option>
+              <option value="certificate">certificate</option>
+              <option value="issuer">issuer</option>
+              <option value="hsm">hsm</option>
+              <option value="service_cert">service_cert</option>
+              <option value="comms">comms</option>
+              <option value="audit">audit</option>
+              <option value="api">api</option>
+              <option value="system">system</option>
+            </select>
+          </label>
+          <button id="audit-verify" type="button" class="secondary">Verify integrity</button>
+          <button id="audit-refresh" type="button" class="secondary">Refresh</button>
+        </div>
+      </div>
+      <p id="audit-integrity"></p>
+      <div id="audit-table"></div>
+    </section>
+
+    <section id="account-security" class="panel">
+      <h2>Account security</h2>
+      <p class="account-totp-status">Loading TOTP status…</p>
+      <p>Generate a replacement set of one-time recovery codes. Previous codes are invalidated.</p>
+      <button class="account-recovery-generate" type="button">Regenerate recovery codes</button>
+      <pre class="account-recovery-output hidden"></pre>
+    </section>
+
+    <section class="panel output-panel">
+      <div class="output-heading">
+        <h2>Event detail</h2>
+        <button id="clear-output" type="button" class="secondary">Clear</button>
+      </div>
+      <pre id="output">Select an event to inspect its full record.</pre>
+    </section>
+  </main>
+
+  <script src="/app/assets/app_shared.js?v=22"></script>
+  <script src="/app/assets/auditor.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>myOwnCA Sign In</title>
+  <link rel="stylesheet" href="/app/assets/app.css?v=21">
+</head>
+<body>
+  <header class="hero auth-hero">
+    <img class="brand-logo brand-logo-hero" src="/branding/logo" alt="myOwnCA logo">
+    <p class="eyebrow">Authentication</p>
+    <h1>Sign in to myOwnCA</h1>
+    <p>Accounts whose role requires TOTP complete an authenticator-app challenge after their password.</p>
+  </header>
+
+  <main class="auth-main">
+    <p id="auth-error" class="form-state is-error" role="alert" aria-live="assertive" hidden></p>
+
+    <form id="login-form" class="panel auth-card">
+      <h2>Sign in</h2>
+      <label>Email <input name="email" type="email" required></label>
+      <label>Password <input name="password" type="password" required></label>
+      <button type="submit">Continue</button>
+      <p class="hint"><button id="forgot-password" type="button" class="secondary">Forgot your password?</button></p>
+      <p class="hint" id="request-access-hint" hidden>No account? <a href="/request-access">Request a certificate</a>.</p>
+    </form>
+
+    <form id="password-recovery-request-form" class="panel auth-card hidden">
+      <h2>Recover your account</h2>
+      <p>Choose any enabled delivery method. For privacy, the response is the same even when an account or contact method is unavailable.</p>
+      <label>Email <input name="email" type="email" required></label>
+      <label>Delivery method <select name="channel" class="recovery-channel-select" required></select></label>
+      <button type="submit">Send recovery code</button>
+      <button id="password-recovery-cancel" type="button" class="secondary">Back to sign in</button>
+      <p id="password-recovery-unavailable" class="hint hidden">No recovery delivery method is enabled. Contact your administrator.</p>
+    </form>
+
+    <form id="password-recovery-verify-form" class="panel auth-card hidden">
+      <h2>Enter the recovery code</h2>
+      <p>Enter the eight-digit, single-use code sent through the selected method.</p>
+      <label>Recovery code <input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" required></label>
+      <button type="submit">Verify code</button>
+      <button id="password-recovery-restart" type="button" class="secondary">Request another code</button>
+    </form>
+
+    <form id="password-change-form" class="panel auth-card hidden">
+      <h2 id="password-change-title">Choose a new password</h2>
+      <p id="password-change-description">Temporary passwords must be replaced before continuing.</p>
+      <label>New password <input name="new_password" type="password" minlength="16" required></label>
+      <button type="submit">Change password</button>
+    </form>
+
+    <section id="totp-enroll-panel" class="panel auth-card hidden">
+      <h2>Enroll TOTP</h2>
+      <p>Scan this QR code with your authenticator app, then confirm one current code.</p>
+      <img id="totp-qr" alt="TOTP enrollment QR code" width="200" height="200" />
+      <p>Can't scan? Enter the secret manually:</p>
+      <pre id="totp-secret"></pre>
+      <pre id="totp-uri"></pre>
+      <form id="totp-enroll-form">
+        <label>Current code <input name="code" inputmode="numeric" autocomplete="one-time-code" required></label>
+        <button type="submit">Confirm TOTP</button>
+      </form>
+    </section>
+
+    <form id="totp-challenge-form" class="panel auth-card hidden">
+      <h2>TOTP challenge</h2>
+      <label>Current code <input name="code" inputmode="numeric" autocomplete="one-time-code" required></label>
+      <button type="submit">Verify</button>
+    </form>
+
+    <section id="recovery-panel" class="panel auth-card hidden">
+      <h2>Lost your authenticator?</h2>
+      <form id="recovery-code-form">
+        <label>Recovery code <input name="code" autocomplete="one-time-code" required placeholder="XXXXX-XXXXX"></label>
+        <button type="submit">Use recovery code</button>
+      </form>
+      <hr>
+      <p>Or get a one-time code through any enabled delivery method. Using it signs you in and prompts you to set up a new authenticator.</p>
+      <label>Delivery method <select id="totp-recovery-channel" class="recovery-channel-select"></select></label>
+      <div class="actions">
+        <button id="recovery-delivery-request" type="button" class="secondary">Send me a code</button>
+      </div>
+      <form id="recovery-delivery-form" class="hidden">
+        <label>Delivered code <input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" required></label>
+        <button type="submit">Verify delivered code</button>
+      </form>
+    </section>
+
+    <section id="recovery-codes-panel" class="panel auth-card hidden">
+      <h2>Save your recovery codes</h2>
+      <p>Store these one-time codes somewhere safe. Each works once to sign in if you lose your authenticator. They are shown only now.</p>
+      <pre id="recovery-codes"></pre>
+      <button id="recovery-codes-continue" type="button">Continue to console</button>
+    </section>
+
+  </main>
+
+  <script src="/app/assets/auth.js?v=4"></script>
+</body>
+</html>

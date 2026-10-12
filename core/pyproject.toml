@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm>=9.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myownca-core"
+dynamic = ["version"]
+description = "Shared CA primitives (storage engine, key generation) for myOwnCA and DeviceCA"
+requires-python = ">=3.12"
+dependencies = [
+  "cryptography>=43.0.0",
+  "sqlalchemy>=2.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["myownca_core*"]
+
+[tool.setuptools_scm]
+root = ".."
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
+
+[tool.setuptools_scm.tag]
+prefix = "v"
+strict = true
+regex = "^(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$"

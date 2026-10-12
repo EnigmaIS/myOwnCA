@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>myOwnCA Certificate Operator Portal</title>
+  <link rel="stylesheet" href="/app/assets/app.css?v=21">
+  <link rel="stylesheet" href="/app/assets/notification-schedule.css?v=1">
+</head>
+<body class="portal-superuser">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="brand-logo" src="/branding/logo" alt="">
+        <div class="license-identity" data-license-identity hidden aria-live="polite"></div>
+        <span>myOwnCA · Certificate Operator</span>
+        <div class="brand-account">
+          <span id="identity">Loading current user…</span>
+          <button id="logout" type="button" class="secondary">Log out</button>
+        </div>
+      </div>
+      <nav class="side-nav" aria-label="Certificate Operator sections">
+        <section class="side-nav-group" aria-labelledby="superuser-nav-operations">
+          <h2 id="superuser-nav-operations" class="side-nav-heading">Operations</h2>
+          <a href="#/getting-started" id="getting-started" class="has-pending-action hidden" hidden>Getting started</a>
+          <a href="#/dashboard" data-view="dashboard">Dashboard</a>
+          <a href="#/requests" data-view="requests">Requests</a>
+          <a href="#/certificates" data-view="certificates">Certificates</a>
+        </section>
+        <section class="side-nav-group" aria-labelledby="superuser-nav-inventory">
+          <h2 id="superuser-nav-inventory" class="side-nav-heading">Certificate holders</h2>
+          <a href="#/people" data-view="people">People</a>
+          <a href="#/devices" data-view="devices">Devices</a>
+          <a href="#/external-certs" data-view="external-certs">External Certs</a>
+        </section>
+        <section class="side-nav-group" aria-labelledby="superuser-nav-system">
+          <h2 id="superuser-nav-system" class="side-nav-heading">System</h2>
+          <a href="#/settings" data-view="settings">Settings</a>
+          <a href="#/others" data-view="others">Others</a>
+          <a href="#/logs" data-view="logs">Logs</a>
+        </section>
+        <section class="side-nav-group" aria-labelledby="superuser-nav-account">
+          <h2 id="superuser-nav-account" class="side-nav-heading">Account</h2>
+          <a href="#/user" data-view="user">Submit CSR</a>
+          <a href="#/account/rec" data-view="account/rec">Recovery codes</a>
+        </section>
+      </nav>
+      <p class="status-pill license-tier sidebar-license-tier status-unknown" data-license-tier role="status" aria-live="polite">Checking licence…</p>
+      <p class="sidebar-app-version" data-app-version>Version…</p>
+      <p class="sidebar-copyright">© <span data-copyright-range>2026</span> EnigmaIS · All rights reserved.</p>
+    </aside>
+
+    <main class="view-host">
+      <!-- Dashboard -->
+      <section class="view" id="view-dashboard" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Certificate authority overview</p>
+          <h1>Dashboard</h1>
+        </div>
+        <div id="dashboard-cards" class="card-grid"></div>
+        <section class="panel">
+          <h2>Summary</h2>
+          <p id="dashboard-summary">Loading…</p>
+        </section>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Licence</h2>
+            <span class="status-pill license-tier status-unknown" data-license-tier>Checking licence…</span>
+          </div>
+          <p id="dashboard-license-summary">Loading licence details…</p>
+        </section>
+      </section>
+
+      <!-- Requests -->
+      <section class="view" id="view-requests" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Review / Sign</p>
+          <h1>Requests</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Certificate request queue</h2>
+            <button id="requests-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p>Select a request to approve, reject, assign a holder, or inspect it. Approval automatically attempts issuance once the threshold is reached.</p>
+          <div id="request-table"></div>
+        </section>
+        <div id="requests-actionbar"></div>
+      </section>
+
+      <!-- Certificates -->
+      <section class="view" id="view-certificates" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Issued certificate inventory</p>
+          <h1>Certificates</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Issued certificates</h2>
+            <button id="certs-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p id="certs-usage" class="hint"></p>
+          <div class="view-search">
+            <input id="certs-search" type="search" placeholder="Search by subject, requester, or serial…">
+            <label class="checkbox-row"><input id="certs-include-archived" type="checkbox"> Include archived certificates</label>
+          </div>
+          <div id="certs-table"></div>
+        </section>
+        <div id="certs-actionbar"></div>
+      </section>
+
+      <!-- People (certificate holders) -->
+      <section class="view" id="view-people" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Certificate holders</p>
+          <h1>People</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>People</h2>
+            <button id="people-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p>Certificate holders. Operators (login accounts) appear here automatically and can be issued certificates. Manage login accounts in the admin portal.</p>
+          <div class="view-search"><input id="people-search" type="search" placeholder="Search by name, email, or Slack…"></div>
+          <div id="people-table"></div>
+        </section>
+        <div id="people-actionbar"></div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Access requests</h2>
+            <button id="access-requests-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p>
+            Email-verified requests from the public <a href="/request-access">request-access page</a>.
+            Approving opens a prefilled person form; the new person can then be invited with a
+            secure link.
+          </p>
+          <div id="access-requests-table"></div>
+        </section>
+      </section>
+
+      <!-- Devices -->
+      <section class="view" id="view-devices" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Registered devices</p>
+          <h1>Devices</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Devices</h2>
+            <button id="devices-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <div class="view-search"><input id="devices-search" type="search" placeholder="Search by name, FQDN, or responsible person…"></div>
+          <div id="devices-table"></div>
+        </section>
+        <div id="devices-actionbar"></div>
+      </section>
+
+      <!-- External Certs -->
+      <section class="view" id="view-external-certs" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Publicly-trusted service certificates</p>
+          <h1>External Certs</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>External certificates</h2>
+            <div class="actions">
+              <button id="svc-refresh" type="button" class="secondary">Refresh</button>
+              <button id="svc-new-csr" type="button" class="secondary">Generate CSR</button>
+              <button id="svc-new-pem" type="button" class="secondary">Import PEM</button>
+              <button id="svc-new-p12" type="button" class="secondary">Import P12</button>
+              <button id="svc-acme-account" type="button" class="secondary">New ACME account</button>
+              <button id="svc-acme-order" type="button" class="secondary">Request ACME</button>
+            </div>
+          </div>
+          <p>Publicly-trusted certs for public interfaces (e.g. an OCSP responder). Keys: software or HSM. Backed by the service-cert endpoints.</p>
+          <div id="svc-table"></div>
+        </section>
+        <div id="svc-actionbar"></div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>ACME accounts</h2>
+            <div class="actions">
+              <button id="svc-acme-account-refresh" type="button" class="secondary">Refresh</button>
+            </div>
+          </div>
+          <p>Accounts used to issue external certificates via ACME. Create one with
+            <strong>New ACME account</strong> above; select a row to view it or delete it.</p>
+          <div id="svc-acme-account-table"></div>
+        </section>
+        <div id="svc-acme-account-actionbar"></div>
+        <section class="panel" id="portal-tls-panel">
+          <div class="toolbar">
+            <h2>Portal TLS certificate</h2>
+            <div class="actions">
+              <button id="portal-tls-clear" type="button" class="secondary" disabled>Clear</button>
+            </div>
+          </div>
+          <p id="portal-tls-status">Loading…</p>
+          <p class="hint">Select a software-keyed certificate above, then choose
+            <strong>Use as portal TLS</strong>. myOwnCA writes the leaf+chain to
+            <code id="portal-tls-crt-path"></code> and the private key to
+            <code id="portal-tls-key-path"></code> (mode 0600). Point your TLS terminator at
+            those files and reload to apply — nginx: <code>ssl_certificate</code> /
+            <code>ssl_certificate_key</code> + <code>nginx -s reload</code>; app-served: set
+            <code>MYOWNCA_TLS_CERT</code> / <code>MYOWNCA_TLS_KEY</code> + restart. myOwnCA does
+            not restart or reload anything for you.
+            <a href="#" id="portal-tls-help-link">Serving HTTPS from these files — full setup</a></p>
+        </section>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Recent ACME errors</h2>
+            <div class="actions">
+              <button id="svc-errors-refresh" type="button" class="secondary">Refresh</button>
+              <button id="svc-errors-clear" type="button" class="secondary">Clear</button>
+            </div>
+          </div>
+          <p class="hint">Recent failures from creating ACME accounts, configuring DNS providers,
+            requesting certificates, or auto-renewal. The full traceback is in the server logs —
+            <code>docker compose logs -f ca</code> or <code>journalctl -u myownca</code>.</p>
+          <div id="svc-errors-table"></div>
+        </section>
+      </section>
+
+      <!-- Settings -->
+      <section class="view" id="view-settings" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Notifications &amp; account</p>
+          <h1>Settings</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Notification templates</h2>
+            <button id="notif-templates-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p>Named, editable text/HTML templates using <code>$variables</code> for certificate, contact and event data.</p>
+          <div id="notif-template-table"></div>
+        </section>
+        <div id="notif-templates-actionbar"></div>
+
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Notification rules</h2>
+            <div class="actions">
+              <button id="notif-rules-refresh" type="button" class="secondary">Refresh</button>
+              <button id="notif-run-now" type="button" class="secondary">Run scheduled checks now</button>
+            </div>
+          </div>
+          <p>Bind an event to a template, channel and audience. Expiring/expired rules run when due through automatic checks or “Run now”.</p>
+          <section class="notification-schedule" id="notification-schedule"></section>
+          <div id="notif-rule-table"></div>
+        </section>
+        <div id="notif-rules-actionbar"></div>
+
+        <section class="panel">
+          <h2>Recent notification deliveries</h2>
+          <div id="notif-log-table"></div>
+        </section>
+
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Secure links</h2>
+            <button id="links-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p>
+            Claim links for holders (delivery / renewal / enrollment). Tokens are stored
+            hashed and cannot be recovered — revoke and issue a new link instead.
+          </p>
+          <div id="links-table"></div>
+        </section>
+
+      </section>
+
+      <!-- Recovery codes -->
+      <section class="view" id="view-account-rec" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Personal tools</p>
+          <h1>Recovery codes</h1>
+        </div>
+        <section class="panel">
+          <h2>Recovery codes</h2>
+          <p id="recovery-totp-status" class="hint">Loading TOTP status…</p>
+          <p>Generate a fresh set of one-time recovery codes. This invalidates any previously issued codes.</p>
+          <div class="actions">
+            <button id="recovery-codes" type="button">Regenerate recovery codes</button>
+          </div>
+        </section>
+      </section>
+
+      <!-- Submit CSR -->
+      <section class="view" id="view-user" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Personal certificate requests</p>
+          <h1>Submit CSR</h1>
+        </div>
+        <div class="csr-page">
+          <section class="grid">
+            <form class="panel csr-request-form">
+              <h2>Request a certificate</h2>
+              <label>Template
+                <select name="template_id" class="csr-template-select" required></select>
+              </label>
+              <label>Request kind
+                <select name="kind" class="csr-request-kind">
+                  <option value="first_issuance">First issuance</option>
+                  <option value="renewal">Renewal</option>
+                </select>
+              </label>
+              <label class="csr-renewal-certificate-field hidden">Certificate to renew
+                <select name="renewal_of_serial_number" class="csr-renewal-certificate-select"></select>
+              </label>
+              <p class="csr-renewal-hint hidden">
+                Renewals must be anchored to one of your active issued certificates. The original
+                template is selected automatically.
+              </p>
+              <label>Key source
+                <select class="csr-key-source">
+                  <option value="csr">I have a CSR</option>
+                  <option value="server">Generate a key for me (server-side)</option>
+                </select>
+              </label>
+              <div class="csr-fields">
+                <label>CSR PEM
+                  <textarea name="csr_pem" rows="12" required placeholder="-----BEGIN CERTIFICATE REQUEST-----"></textarea>
+                </label>
+              </div>
+              <div class="csr-server-key-fields hidden">
+                <label>Common name <input name="common_name" placeholder="host.example.test"></label>
+                <label class="dns-san-field">DNS SANs (comma separated) <input name="dns_names" placeholder="host.example.test, alt.example.test"></label>
+                <label class="email-san-field">Email SANs (comma separated) <input name="email_addresses" type="email" multiple placeholder="alice@example.test"></label>
+                <label>Key algorithm
+                  <select name="algorithm">
+                    <option value="ecdsa-p256" selected>ECDSA P-256</option>
+                    <option value="ecdsa-p384">ECDSA P-384</option>
+                    <option value="ecdsa-p521">ECDSA P-521</option>
+                    <option value="rsa-2048">RSA 2048</option>
+                    <option value="rsa-4096">RSA 4096</option>
+                  </select>
+                </label>
+                <p class="hint">
+                  The server generates the key pair, builds the CSR, and keeps the key encrypted so
+                  you can download PKCS#12 / PEM+key bundles after issuance.
+                </p>
+              </div>
+              <button type="submit">Submit request</button>
+            </form>
+
+            <section class="panel">
+              <h2>Available templates</h2>
+              <div class="csr-template-table"></div>
+            </section>
+          </section>
+
+          <section class="panel">
+            <div class="toolbar">
+              <h2>My requests</h2>
+              <button type="button" class="secondary csr-refresh">Refresh</button>
+            </div>
+            <div class="csr-request-table"></div>
+          </section>
+
+          <section class="panel">
+            <h2>My issued certificates</h2>
+            <div class="csr-certificate-table"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- Others -->
+      <section class="view" id="view-others" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Configuration and administration</p>
+          <h1>Others</h1>
+        </div>
+        <section class="panel">
+          <h2>Certificate Revocation List (CRL)</h2>
+          <p>Queue an immediate refresh or download the latest locally generated CRL.</p>
+          <div class="actions">
+            <button id="crl-generate" type="button" disabled>Queue CRL refresh</button>
+            <button id="crl-download" type="button" class="secondary" disabled>Download CRL</button>
+          </div>
+          <pre id="crl-status" class="code-block">CRL status not loaded yet.</pre>
+          <p class="notice" style="margin-top: 14px; padding: 12px; border-radius: 12px;">
+            Revocations queue a refresh automatically. This action uses the same durable
+            queue and is intended for an exceptional manual refresh.
+          </p>
+        </section>
+      </section>
+
+      <!-- Logs / details (kept #output for BB.setOutput compatibility) -->
+      <section class="view" id="view-logs" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Action output</p>
+          <h1>Logs</h1>
+        </div>
+        <section id="details-drawer" class="panel output-panel">
+          <div class="output-heading">
+            <h2>Details</h2>
+            <button id="drawer-close" type="button" class="secondary">Clear</button>
+          </div>
+          <pre id="output">Select a record and choose “View” or “Details”.</pre>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal form bodies (cloned on demand) -->
+  <template id="tpl-holder-form">
+    <form id="holder-form">
+      <p>Bind this request to a person or device before issuance. Devices resolve to their responsible person automatically.</p>
+      <label>Holder type
+        <select id="holder-type-select">
+          <option value="person">Person</option>
+          <option value="device">Device</option>
+        </select>
+      </label>
+      <label id="holder-person-label">Person
+        <select name="person_id" id="holder-person-select"></select>
+      </label>
+      <label id="holder-device-label" class="hidden">Device
+        <select name="device_id" id="holder-device-select"></select>
+      </label>
+      <button type="submit">Assign holder</button>
+    </form>
+  </template>
+
+  <template id="tpl-hsm-unlock-form">
+    <form id="hsm-unlock-form">
+      <p id="hsm-unlock-intro"></p>
+      <label>HSM User PIN
+        <input type="password" name="pin" id="hsm-unlock-pin" autocomplete="off" required />
+      </label>
+      <p class="hint">The PIN is held in memory for this session only. It is never written to disk, and locking, signing out, or a service restart drops it.</p>
+      <button type="submit">Unlock HSM</button>
+    </form>
+  </template>
+
+  <template id="tpl-cert-create-form">
+    <form id="cert-create-form">
+      <p>Generate a server-keyed certificate for a person or device using a template. Templates that require approvals count yours automatically — a multi-approval template still needs another Certificate Operator.</p>
+      <label>Template
+        <select name="template_id" id="cert-create-template" required></select>
+      </label>
+      <label>Holder type
+        <select id="cert-create-type">
+          <option value="person">Person</option>
+          <option value="device">Device</option>
+        </select>
+      </label>
+      <label id="cert-create-person-label">Person
+        <select name="person_id" id="cert-create-person"></select>
+      </label>
+      <label id="cert-create-device-label" class="hidden">Device
+        <select name="device_id" id="cert-create-device"></select>
+      </label>
+      <label>Common name <input name="common_name" required placeholder="alice@example.test / host.example.test"></label>
+      <label class="dns-san-field">DNS SANs (comma-separated) <input name="dns_names" placeholder="host.example.test"></label>
+      <label class="email-san-field">Email SANs (comma-separated) <input name="email_addresses" type="email" multiple placeholder="alice@example.test"></label>
+      <label>Algorithm
+        <select name="algorithm"></select>
+      </label>
+      <button type="submit">Create certificate</button>
+    </form>
+  </template>
+
+  <template id="tpl-person-form">
+    <form id="person-form">
+      <label>First name <input name="name" required></label>
+      <label>Surname <input name="surname" required></label>
+      <label>Email <input name="email" type="email" required></label>
+      <label>Phone <input name="phone"></label>
+      <label>Slack handle <input name="slack_handle" placeholder="@user"></label>
+      <label>Company <input name="company"></label>
+      <label>Comments <input name="comments"></label>
+      <button type="submit">Save person</button>
+    </form>
+  </template>
+
+  <template id="tpl-device-form">
+    <form id="device-form">
+      <label>Device name <input name="device_name" required></label>
+      <label>FQDN <input name="fqdn" placeholder="host.example.test"></label>
+      <label>Responsible person
+        <select name="admin_id" id="device-admin-select" required></select>
+      </label>
+      <label>Comments <input name="comments"></label>
+      <button type="submit">Save device</button>
+    </form>
+  </template>
+
+  <template id="tpl-svc-csr-form">
+    <form id="svc-csr-form">
+      <label>Name <input name="name" required placeholder="ocsp-responder"></label>
+      <label>Common name <input name="common_name" required placeholder="ocsp.example.test"></label>
+      <label>DNS SANs (comma-separated) <input name="dns_names" placeholder="ocsp.example.test"></label>
+      <label>Key backend
+        <select name="key_backend"><option value="software">software</option><option value="pkcs11">pkcs11 (HSM)</option><option value="aws_kms">AWS KMS</option><option value="azure_key_vault">Azure Key Vault</option></select>
+      </label>
+      <label>Algorithm
+        <select name="algorithm"><option value="ecdsa-p256">ecdsa-p256</option><option value="ecdsa-p384">ecdsa-p384</option><option value="ecdsa-p521">ecdsa-p521</option><option value="rsa-2048">rsa-2048</option><option value="rsa-3072">rsa-3072</option><option value="rsa-4096">rsa-4096</option></select>
+      </label>
+      <button type="submit">Generate CSR</button>
+    </form>
+  </template>
+
+  <template id="tpl-svc-import-cert-form">
+    <form id="svc-import-cert-form">
+      <p>Import the signed certificate for the selected pending request.</p>
+      <label>Certificate PEM <textarea name="certificate_pem" rows="6" required placeholder="-----BEGIN CERTIFICATE-----"></textarea></label>
+      <label>Chain PEM (optional) <textarea name="chain_pem" rows="4" placeholder="intermediate(s)"></textarea></label>
+      <button type="submit">Import certificate</button>
+    </form>
+  </template>
+
+  <template id="tpl-svc-import-pem-form">
+    <form id="svc-import-pem-form">
+      <label>Name <input name="name" required></label>
+      <label>Certificate PEM <textarea name="certificate_pem" rows="5" required></textarea></label>
+      <label>Private key PEM <textarea name="private_key_pem" rows="5" required></textarea></label>
+      <label>Chain PEM (optional) <textarea name="chain_pem" rows="3"></textarea></label>
+      <label>Key passphrase (if encrypted) <input name="key_passphrase" type="password"></label>
+      <button type="submit">Import PEM</button>
+    </form>
+  </template>
+
+  <template id="tpl-svc-import-p12-form">
+    <form id="svc-import-p12-form">
+      <label>Name <input name="name" required></label>
+      <label>PKCS#12 file <input name="p12_file" type="file" accept=".p12,.pfx" required></label>
+      <label>Password <input name="password" type="password"></label>
+      <button type="submit">Import P12</button>
+    </form>
+  </template>
+
+  <template id="tpl-acme-account-form">
+    <form id="acme-account-form">
+      <label>Directory URL
+        <input name="directory_url" required value="https://acme-v02.api.letsencrypt.org/directory">
+      </label>
+      <label>Contact email <input name="contact" type="email" placeholder="ops@example.test"></label>
+      <label>DNS provider (optional, for DNS-01 / wildcards)
+        <select name="dns_provider">
+          <option value="">none (manual)</option>
+          <option value="luadns">LuaDNS</option>
+          <option value="cloudflare">Cloudflare</option>
+          <option value="route53">Route 53</option>
+        </select>
+      </label>
+      <label>DNS API username/email <input name="dns_username" placeholder="LuaDNS: account email"></label>
+      <label>DNS API token <input name="dns_token" type="password" placeholder="provider API key/token"></label>
+      <button type="submit">Register account</button>
+    </form>
+  </template>
+
+  <template id="tpl-acme-order-form">
+    <form id="acme-order-form">
+      <label>Name <input name="name" required placeholder="web-tls"></label>
+      <label>Account <select name="account_id" id="acme-account-select" required></select></label>
+      <label>Domains (comma-separated) <input name="domains" required placeholder="example.test, www.example.test"></label>
+      <label>Challenge
+        <select name="challenge_type"><option value="http-01">http-01</option><option value="dns-01">dns-01 (manual TXT)</option></select>
+      </label>
+      <label>Key backend
+        <select name="key_backend"><option value="software">software</option><option value="pkcs11">pkcs11 (HSM)</option><option value="aws_kms">AWS KMS</option><option value="azure_key_vault">Azure Key Vault</option></select>
+      </label>
+      <label>Algorithm
+        <select name="algorithm"><option value="ecdsa-p256">ecdsa-p256</option><option value="ecdsa-p384">ecdsa-p384</option><option value="ecdsa-p521">ecdsa-p521</option><option value="rsa-2048">rsa-2048</option><option value="rsa-3072">rsa-3072</option><option value="rsa-4096">rsa-4096</option></select>
+      </label>
+      <label>Renew before (days) <input name="renew_before_days" type="number" value="30" min="1"></label>
+      <button type="submit">Request certificate</button>
+    </form>
+  </template>
+
+  <template id="tpl-notif-template-form">
+    <form id="notif-template-form">
+      <label>Template name <input name="name" required placeholder="notify-expiring-30d"></label>
+      <label>Event
+        <select name="event_type">
+          <option value="expiring">expiring certificates</option>
+          <option value="issued">issued certificates</option>
+          <option value="requested">certificate requests</option>
+          <option value="expired">expired certificates</option>
+          <option value="otp">OTP messages</option>
+          <option value="access_requested">access requests (new people)</option>
+          <option value="cloud_signing_alert">cloud signing alerts</option>
+        </select>
+      </label>
+      <label>Format
+        <select name="format"><option value="text">text</option><option value="html">html</option></select>
+      </label>
+      <label>Subject <input name="subject" placeholder="$cert_name expires $expiry_date"></label>
+      <label>Body <textarea name="body" rows="8" spellcheck="false" placeholder="Hi $person_name, certificate $serial expires $expiry_date. $notification_text"></textarea></label>
+      <details>
+        <summary>Variable reference</summary>
+        <pre class="notice" id="notif-variable-reference">Loading…</pre>
+      </details>
+      <div class="actions">
+        <button type="button" id="notif-preview-btn" class="secondary">Preview</button>
+        <button type="submit">Save template</button>
+      </div>
+      <pre id="notif-preview-output" hidden></pre>
+    </form>
+  </template>
+
+  <template id="tpl-notif-rule-form">
+    <form id="notif-rule-form">
+      <label>Event
+        <select name="event_type">
+          <option value="expiring">expiring certificates</option>
+          <option value="issued">issued certificates</option>
+          <option value="requested">certificate requests</option>
+          <option value="expired">expired certificates</option>
+          <option value="otp">OTP messages</option>
+          <option value="access_requested">access requests (new people)</option>
+          <option value="cloud_signing_alert">cloud signing alerts</option>
+        </select>
+      </label>
+      <label>Template <select name="template_name" id="notif-rule-template-select" required></select></label>
+      <label>Channel
+        <select name="channel">
+          <option value="email">email</option>
+          <option value="sms">sms</option>
+          <option value="slack">slack</option>
+          <option value="webhook">webhook</option>
+          <option value="https">https</option>
+        </select>
+      </label>
+      <label>Audience
+        <select name="audience">
+          <option value="holder">holder (responsible person)</option>
+          <option value="requester">requester</option>
+          <option value="approvers">approvers (Certificate Operators)</option>
+          <option value="operators">administrators and Certificate Operators</option>
+        </select>
+      </label>
+      <label class="checkbox"><input name="enabled" type="checkbox" checked> Enabled</label>
+      <label class="checkbox">
+        <input name="include_renewal_link" type="checkbox">
+        Include renewal link ($renewal_url) — expiring/expired rules only
+      </label>
+      <label>Rule interval (days) <input name="period_days" type="number" value="1" min="1" aria-describedby="notif-rule-interval-help"></label>
+      <p class="hint" id="notif-rule-interval-help">For expiring/expired rules, the minimum time between scheduled runs of this rule.</p>
+      <label>Expiring window (days before expiry) <input name="threshold_days" type="number" value="30" min="0"></label>
+      <label>Notification text (exposed as $notification_text) <textarea name="notification_text" rows="2"></textarea></label>
+      <button type="submit">Save rule</button>
+    </form>
+  </template>
+
+  <template id="tpl-portal-tls-help">
+    <div>
+      <p>These two files are written and kept current by myOwnCA, but nothing serves them until you point a listener at them. Choose one of the two shapes below.</p>
+
+      <h3>A. myOwnCA serves HTTPS itself</h3>
+      <p>Edit <code>config.toml</code> in your state directory (the same folder that holds <code>tls/</code>) and add to the <code>[env]</code> table:</p>
+      <pre id="portal-tls-help-config">[env]
+MYOWNCA_BIND_HOST = "0.0.0.0"
+MYOWNCA_BIND_PORT = "8000"
+MYOWNCA_TLS_CERT = "&lt;crt path&gt;"
+MYOWNCA_TLS_KEY = "&lt;key path&gt;"
+MYOWNCA_SESSION_COOKIE_SECURE = "true"</pre>
+      <p>Then restart the service. Settings are read once at process start.</p>
+      <ul>
+        <li><strong>Every value must be a quoted string</strong>, including the port. That is the file format, not a style choice.</li>
+        <li><code>MYOWNCA_BIND_HOST</code> defaults to <code>127.0.0.1</code>, which accepts only local connections. Use the interface address to expose one card, or <code>0.0.0.0</code> for all of them.</li>
+        <li>Process environment variables override <code>config.toml</code>, so a stray exported value wins over what you write here.</li>
+        <li>Set both TLS paths or neither. A half-configured pair makes the service refuse to start rather than quietly serve plain HTTP.</li>
+      </ul>
+
+      <h3>B. A reverse proxy terminates TLS</h3>
+      <p>Point nginx at the same files and keep myOwnCA on loopback, so only the proxy can reach it:</p>
+      <pre>ssl_certificate     &lt;crt path&gt;;
+ssl_certificate_key &lt;key path&gt;;</pre>
+      <p>Reload with <code>nginx -s reload</code>. Leave <code>MYOWNCA_BIND_HOST</code> at <code>127.0.0.1</code>, and still set <code>MYOWNCA_SESSION_COOKIE_SECURE = "true"</code> because clients are on HTTPS.</p>
+
+      <h3>Order of operations</h3>
+      <ol>
+        <li>Select the certificate here first. The files are written immediately.</li>
+        <li>Only then add the TLS paths and restart. Pointing a listener at files that do not exist yet stops it from starting.</li>
+      </ol>
+
+      <h3>Things that commonly go wrong</h3>
+      <ul>
+        <li><strong>Cookie flag before TLS.</strong> With <code>MYOWNCA_SESSION_COOKIE_SECURE = "true"</code> over plain HTTP the browser will not return the session cookie, and login fails with nothing obviously wrong. Set it only once HTTPS is actually serving.</li>
+        <li><strong>Name mismatch.</strong> The certificate must cover the address you browse to. A certificate for a hostname will not validate against <code>https://192.168.1.50:8000</code> unless that IP is in its SANs.</li>
+        <li><strong>Your own CA is not trusted yet.</strong> If this certificate was issued by this CA, install the root certificate in the operating system or browser trust store. Clicking through a warning page to reach a CA admin portal is a habit worth not forming.</li>
+        <li><strong>Renewal needs a restart.</strong> The files are refreshed on renewal and on every boot, but a running process reads its certificate once at startup. After a renewal, restart the service (or reload the proxy) or the old certificate keeps being served.</li>
+        <li><strong>Exposing plain HTTP.</strong> Until TLS is serving, admin passwords, TOTP codes and session cookies cross the network in the clear. Change the bind address and enable TLS in the same maintenance window.</li>
+      </ul>
+    </div>
+  </template>
+
+  <template id="tpl-cert-link-form">
+    <form id="cert-link-form">
+      <p>
+        Create a secure one-time download link for this certificate's holder. Opening the
+        link requires a verification code emailed to the holder; the link expires
+        automatically and can be revoked.
+      </p>
+      <p id="cert-link-recipient" class="hint"></p>
+      <label class="checkbox"><input name="send_email" type="checkbox" checked> Email the link to the holder</label>
+      <button type="submit">Create link</button>
+    </form>
+  </template>
+
+  <template id="tpl-cert-send-form">
+    <form id="cert-send-form">
+      <label>Delivery format
+        <select name="delivery_format">
+          <option value="pem">Certificate PEM</option>
+          <option value="pkcs12">Encrypted PKCS#12 (.p12)</option>
+        </select>
+      </label>
+      <p data-pem-fields>Deliver the certificate (PEM) to its holder. Leave the recipient blank to use the holder's contact for the chosen channel.</p>
+      <div data-pem-fields>
+        <label>Channel
+          <select name="channel">
+            <option value="email">email</option>
+            <option value="sms">sms</option>
+            <option value="slack">slack</option>
+            <option value="webhook">webhook</option>
+            <option value="https">https</option>
+          </select>
+        </label>
+        <label>Recipient override (optional) <input name="recipient_override" placeholder="holder's email / phone / @handle"></label>
+      </div>
+      <div data-pkcs12-fields class="hidden">
+        <p>The encrypted .p12 file goes to the holder's saved email address. Its generated password goes to the holder's separate contact.</p>
+        <label>Password channel
+          <select name="password_channel">
+            <option value="sms">SMS</option>
+            <option value="slack">Slack</option>
+          </select>
+        </label>
+        <label class="checkbox"><input type="checkbox" name="include_ca_certificates" checked> Also attach the CA certificates (sub-ca.cer, root-ca.cer)</label>
+        <p class="hint">Devices need these installed separately to trust the certificate. The copies inside the bundle are not usable as trust anchors — on iOS the root must be enabled under Settings &gt; General &gt; About &gt; Certificate Trust Settings.</p>
+        <label data-pkcs12-reauth>Fresh authentication required <input name="sensitive_auth" type="password" autocomplete="current-password"></label>
+        <p data-pkcs12-reauth-hint class="hint">Checking which credential this account uses…</p>
+      </div>
+      <button type="submit">Send certificate</button>
+    </form>
+  </template>
+
+  <script src="/app/assets/app_shared.js?v=22"></script>
+  <script src="/app/assets/leaf-import.js?v=1"></script>
+  <script src="/app/assets/notification-schedule.js?v=2"></script>
+  <script src="/app/assets/superuser.js?v=15"></script>
+</body>
+</html>

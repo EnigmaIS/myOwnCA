@@ -1,0 +1,107 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm>=9.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myownca"
+dynamic = ["version"]
+description = "Self-hosted private CA foundation for SMBs"
+readme = "docs/README.md"
+license = "LicenseRef-EnigmaIS-Source-Available-1.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = [
+  "acme>=2.0.0",
+  "argon2-cffi>=25.1.0",
+  "cryptography>=43.0.0",
+  "fastapi>=0.115.0",
+  "josepy>=1.14.0",
+  "pydantic>=2.10.0",
+  "python-pkcs11>=0.7.0",
+  "qrcode>=7.4",
+  "sqlalchemy>=2.0.0",
+  "tomli-w>=1.0",
+  "uvicorn>=0.32.0",
+  "boto3>=1.35.0",
+  "azure-identity>=1.19.0",
+  "azure-keyvault-keys>=4.10.0",
+  "dns-lexicon>=3.11",
+  "dnspython>=2.6",
+  "PyMySQL>=1.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "ruff>=0.9.0",
+  # Real wheel integration tests build without isolation in the test environment.
+  "setuptools>=80",
+  "setuptools-scm>=9.2",
+]
+# All runtime integrations ship with the base distribution. Keep these empty
+# aliases so existing extra-based install commands remain valid.
+hsm = []
+aws-kms = []
+azure-key-vault = []
+cloud = []
+# ACME is built in; this alias is retained for backwards compatibility.
+acme = []
+# DNS-01 and MariaDB are built in too; their aliases are also compatibility-only.
+dns = []
+mariadb = []
+
+[project.scripts]
+myownca = "myownca.launcher:main"
+myownca-online = "myownca.online.app:run"
+myownca-offline = "myownca.offline.cli:main"
+myownca-auth-bootstrap = "myownca.ca_auth.cli:main"
+myownca-acme-renew = "myownca.service_certs.cli:main"
+myownca-notify-run = "myownca.notifications.cli:main"
+myownca-key-cleanup = "myownca.key_lifecycle.cli:main"
+myownca-reencrypt-secrets = "myownca.storage.reencrypt_cli:main"
+myownca-verify = "myownca_release.cli:main"
+myownca-release = "myownca_release.sign:main"
+
+# Ship the shared core namespace in the application wheel from its canonical
+# source tree. core/pyproject.toml can still build that namespace independently
+# for DeviceCA without duplicating source files.
+[tool.setuptools.packages.find]
+where = ["src", "core"]
+include = ["myownca*", "myownca_core*"]
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
+
+[tool.setuptools_scm.tag]
+prefix = "v"
+strict = true
+regex = "^(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$"
+
+# Runtime data files loaded by __file__-relative path. These live next to the
+# code but are not modules, so they must be declared as package data or an
+# installed wheel ships without them — the source tree (pythonpath=src) hides
+# this, but the Docker image (an installed wheel) needs them: the setup wizard
+# (setup.html), every portal page (online/static), the shared theme tokens
+# (ui_theme.css), and DB bootstrap (storage/migrations/*.sql). The static globs
+# are recursive (`**/*`) so files in subdirectories ship too — e.g. the default
+# `static/branding/logo.svg`, whose absence 500'd GET /branding/logo from a
+# non-recursive `static/*`.
+[tool.setuptools.package-data]
+"myownca" = ["ui_theme.css"]
+"myownca.setup" = ["static/**/*"]
+"myownca.online" = ["static/**/*"]
+"myownca.storage" = ["migrations/*.sql"]
+"myownca_release" = ["release-files.json", "release-files.json.sig"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "core"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# Preserve the established checks when newer Ruff versions change their defaults.
+select = ["E4", "E7", "E9", "F"]

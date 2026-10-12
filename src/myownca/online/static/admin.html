@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>myOwnCA Admin Portal</title>
+  <link rel="stylesheet" href="/app/assets/app.css?v=21">
+  <link rel="stylesheet" href="/app/assets/notification-schedule.css?v=1">
+</head>
+<body class="portal-admin">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="brand-logo" src="/branding/logo" alt="">
+        <div class="license-identity" data-license-identity hidden aria-live="polite"></div>
+        <span>myOwnCA · Admin</span>
+        <div class="brand-account">
+          <span id="identity">Loading current user…</span>
+          <button id="logout" type="button" class="secondary">Log out</button>
+        </div>
+      </div>
+      <nav class="side-nav" aria-label="Admin sections">
+        <section class="side-nav-group" aria-labelledby="admin-nav-operations">
+          <h2 id="admin-nav-operations" class="side-nav-heading">Operations</h2>
+          <a href="#/getting-started" id="getting-started" class="has-pending-action hidden" hidden>Getting started</a>
+          <a href="#/dashboard" data-view="dashboard">Dashboard</a>
+          <a href="#/ca" data-view="ca">CA management</a>
+          <a href="#/templates" data-view="templates">Templates</a>
+          <a href="#/holder" data-view="holder">Holder portal</a>
+        </section>
+        <section class="side-nav-group" aria-labelledby="admin-nav-inventory">
+          <h2 id="admin-nav-inventory" class="side-nav-heading">Certificate holders</h2>
+          <a href="#/people" data-view="people">People</a>
+          <a href="#/devices" data-view="devices">Devices</a>
+        </section>
+        <section class="side-nav-group" aria-labelledby="admin-nav-security">
+          <h2 id="admin-nav-security" class="side-nav-heading">Security</h2>
+          <a href="#/authentication" data-view="authentication">Authentication</a>
+          <a href="#/privileged" data-view="privileged">Privileged users <span id="proposal-badge" class="badge danger hidden"></span></a>
+          <a href="#/hsm" data-view="hsm">HSM &amp; Keys</a>
+          <a href="#/entropy" data-view="entropy">Random number source</a>
+          <a href="#/auditing" data-view="auditing">Auditing</a>
+        </section>
+        <section class="side-nav-group" aria-labelledby="admin-nav-system">
+          <h2 id="admin-nav-system" class="side-nav-heading">System</h2>
+          <a href="#/channels" data-view="channels">Notifications &amp; integrations</a>
+          <a href="#/backups" data-view="backups">Backups</a>
+          <a href="#/license" data-view="license">License</a>
+          <a href="#/appearance" data-view="appearance">Appearance</a>
+          <a href="#/logs" data-view="logs">Activity &amp; diagnostics</a>
+        </section>
+        <section class="side-nav-group" aria-labelledby="admin-nav-account">
+          <h2 id="admin-nav-account" class="side-nav-heading">Account</h2>
+          <a href="#/user" data-view="user">Submit CSR</a>
+          <a href="#/account/rec" data-view="account/rec">Recovery codes</a>
+        </section>
+      </nav>
+      <p class="status-pill license-tier sidebar-license-tier status-unknown" data-license-tier role="status" aria-live="polite">Checking licence…</p>
+      <p class="sidebar-app-version" data-app-version>Version…</p>
+      <p class="sidebar-copyright">© <span data-copyright-range>2026</span> EnigmaIS · All rights reserved.</p>
+    </aside>
+
+    <main class="view-host">
+      <!-- Dashboard -->
+      <section class="view" id="view-dashboard" hidden>
+        <div class="view-header dashboard-header">
+          <div>
+            <p class="eyebrow">Operational overview</p>
+            <h1>Dashboard</h1>
+          </div>
+          <div class="dashboard-refresh-control">
+            <button id="dashboard-refresh" type="button" class="secondary">Refresh overview</button>
+            <p id="dashboard-refresh-status" class="freshness" role="status" aria-live="polite">Not checked yet</p>
+          </div>
+        </div>
+
+        <div class="dashboard-summary-grid">
+          <section class="panel dashboard-region" id="dashboard-lifecycle-region" aria-labelledby="dashboard-lifecycle-title">
+            <div class="toolbar">
+              <div>
+                <p class="eyebrow">Certificates</p>
+                <h2 id="dashboard-lifecycle-title">Lifecycle &amp; automation</h2>
+              </div>
+              <span class="owner-label">Owner: Certificate Operator</span>
+            </div>
+            <div id="dashboard-lifecycle" class="dashboard-region-content" aria-live="polite" aria-busy="true">
+              <p class="loading-state">Loading lifecycle health…</p>
+            </div>
+            <p class="hint">Certificate actions stay in the separate Certificate Operator portal; this view shows administrators where a handoff is needed.</p>
+            <p id="dashboard-lifecycle-freshness" class="freshness"></p>
+          </section>
+
+          <section class="panel dashboard-region" id="dashboard-capacity-region" aria-labelledby="dashboard-capacity-title">
+            <div class="toolbar">
+              <div>
+                <p class="eyebrow">Limits</p>
+                <h2 id="dashboard-capacity-title">Capacity</h2>
+              </div>
+              <div class="dashboard-license-actions">
+                <span class="status-pill license-tier status-unknown" data-license-tier>Checking licence…</span>
+                <a class="button-link secondary compact" href="#/license">Manage license</a>
+              </div>
+            </div>
+            <div id="dashboard-capacity" class="dashboard-region-content" aria-live="polite" aria-busy="true">
+              <p class="loading-state">Loading capacity…</p>
+            </div>
+            <p id="dashboard-capacity-freshness" class="freshness"></p>
+          </section>
+        </div>
+
+        <section class="panel dashboard-region" id="dashboard-readiness-region" aria-labelledby="dashboard-readiness-title">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Go-live journey</p>
+              <h2 id="dashboard-readiness-title">Production readiness</h2>
+            </div>
+            <span id="dashboard-readiness-count" class="status-pill status-unknown">—</span>
+          </div>
+          <div id="dashboard-readiness" class="dashboard-region-content" aria-live="polite" aria-busy="true">
+            <p class="loading-state">Loading readiness progress…</p>
+          </div>
+          <p id="dashboard-readiness-freshness" class="freshness"></p>
+        </section>
+
+        <section class="panel dashboard-region dashboard-attention" id="dashboard-attention-region" aria-labelledby="dashboard-attention-title">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Action queue</p>
+              <h2 id="dashboard-attention-title">Needs attention</h2>
+            </div>
+            <span id="dashboard-overall-status" class="status-pill status-unknown">Checking…</span>
+          </div>
+          <div id="dashboard-attention" class="dashboard-region-content" aria-live="polite" aria-busy="true">
+            <p class="loading-state">Checking operational health…</p>
+          </div>
+          <p id="dashboard-attention-freshness" class="freshness"></p>
+        </section>
+
+      </section>
+
+      <!-- Appearance -->
+      <section class="view" id="view-appearance" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Branding &amp; look</p>
+          <h1>Appearance</h1>
+        </div>
+        <section class="panel" id="branding-panel">
+          <h2>Branding logo</h2>
+          <p>Shown on the login page and the portal sidebars. PNG, JPEG, or SVG, up to 2&nbsp;MB.</p>
+          <img id="branding-preview" class="brand-logo brand-logo-hero" src="/branding/logo" alt="Current logo">
+          <div class="actions">
+            <input id="branding-file" type="file" accept="image/png,image/jpeg,image/svg+xml">
+            <button id="branding-upload" type="button">Upload</button>
+            <button id="branding-reset" type="button" class="secondary">Reset to default</button>
+          </div>
+        </section>
+        <section class="panel" id="theme-panel">
+          <h2>Theme color</h2>
+          <div class="color-control-row">
+            <label>Brand color
+              <span class="color-control">
+                <input id="theme-color" type="color" value="#246b5b" aria-label="Brand color">
+              </span>
+            </label>
+            <label>Hex color
+              <input id="theme-color-hex" type="text" value="#246b5b" pattern="#?[0-9A-Fa-f]{6}">
+            </label>
+          </div>
+          <div class="actions">
+            <button id="theme-save" type="button">Save theme</button>
+            <button id="theme-reset" type="button" class="secondary">Reset to default</button>
+          </div>
+        </section>
+      </section>
+
+      <!-- Recovery codes -->
+      <section class="view" id="view-account-rec" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Personal tools</p>
+          <h1>Recovery codes</h1>
+        </div>
+        <section class="grid">
+          <section class="panel">
+            <h2>Recovery codes</h2>
+            <p id="recovery-totp-status" class="hint">Loading TOTP status…</p>
+            <p>Generate a new one-time set of account recovery codes. This invalidates previous recovery codes.</p>
+            <div class="actions">
+              <button id="recovery-codes" type="button">Regenerate recovery codes</button>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <!-- Submit CSR -->
+      <section class="view" id="view-user" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Personal certificate requests</p>
+          <h1>Submit CSR</h1>
+        </div>
+        <div class="csr-page">
+          <section class="grid">
+            <form class="panel csr-request-form">
+              <h2>Request a certificate</h2>
+              <label>Template
+                <select name="template_id" class="csr-template-select" required></select>
+              </label>
+              <label>Request kind
+                <select name="kind" class="csr-request-kind">
+                  <option value="first_issuance">First issuance</option>
+                  <option value="renewal">Renewal</option>
+                </select>
+              </label>
+              <label class="csr-renewal-certificate-field hidden">Certificate to renew
+                <select name="renewal_of_serial_number" class="csr-renewal-certificate-select"></select>
+              </label>
+              <p class="csr-renewal-hint hidden">
+                Renewals must be anchored to one of your active issued certificates. The original
+                template is selected automatically.
+              </p>
+              <label>Key source
+                <select class="csr-key-source">
+                  <option value="csr">I have a CSR</option>
+                  <option value="server">Generate a key for me (server-side)</option>
+                </select>
+              </label>
+              <div class="csr-fields">
+                <label>CSR PEM
+                  <textarea name="csr_pem" rows="12" required placeholder="-----BEGIN CERTIFICATE REQUEST-----"></textarea>
+                </label>
+              </div>
+              <div class="csr-server-key-fields hidden">
+                <label>Common name <input name="common_name" placeholder="host.example.test"></label>
+                <label class="dns-san-field">DNS SANs (comma separated) <input name="dns_names" placeholder="host.example.test, alt.example.test"></label>
+                <label class="email-san-field">Email SANs (comma separated) <input name="email_addresses" type="email" multiple placeholder="alice@example.test"></label>
+                <label>Key algorithm
+                  <select name="algorithm">
+                    <option value="ecdsa-p256" selected>ECDSA P-256</option>
+                    <option value="ecdsa-p384">ECDSA P-384</option>
+                    <option value="ecdsa-p521">ECDSA P-521</option>
+                    <option value="rsa-2048">RSA 2048</option>
+                    <option value="rsa-4096">RSA 4096</option>
+                  </select>
+                </label>
+                <p class="hint">
+                  The server generates the key pair, builds the CSR, and keeps the key encrypted so
+                  you can download PKCS#12 / PEM+key bundles after issuance.
+                </p>
+              </div>
+              <button type="submit">Submit request</button>
+            </form>
+
+            <section class="panel">
+              <h2>Available templates</h2>
+              <div class="csr-template-table"></div>
+            </section>
+          </section>
+
+          <section class="panel">
+            <div class="toolbar">
+              <h2>My requests</h2>
+              <button type="button" class="secondary csr-refresh">Refresh</button>
+            </div>
+            <div class="csr-request-table"></div>
+          </section>
+
+          <section class="panel">
+            <h2>My issued certificates</h2>
+            <div class="csr-certificate-table"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- Authentication policy -->
+      <section class="view" id="view-authentication" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Install-level security policy</p>
+          <h1>Authentication</h1>
+        </div>
+        <form id="totp-policy-form" class="panel">
+          <div class="toolbar">
+            <div>
+              <h2>TOTP requirements by role</h2>
+              <p>When enabled, every account in that role must enroll and use TOTP after its password.</p>
+            </div>
+            <span id="totp-policy-governance" class="status-pill status-unknown">Loading…</span>
+          </div>
+          <p class="hint danger-text"><strong>Disabling a role is destructive:</strong> all accounts in that role are signed out and their TOTP factors, recovery codes, and recovery challenges are permanently deleted.</p>
+          <div class="grid">
+            <label class="checkbox panel inset-panel"><input type="checkbox" name="required_roles" value="admin"><span><strong>Administrator</strong> · Recommended</span></label>
+            <label class="checkbox panel inset-panel"><input type="checkbox" name="required_roles" value="superuser"><span><strong>Certificate Operator</strong> · Recommended</span></label>
+            <label class="checkbox panel inset-panel"><input type="checkbox" name="required_roles" value="auditor"><span><strong>Auditor</strong></span></label>
+            <label class="checkbox panel inset-panel"><input type="checkbox" name="required_roles" value="user"><span><strong>User</strong></span></label>
+          </div>
+          <div class="actions">
+            <button id="totp-policy-save" type="submit">Save TOTP policy</button>
+            <button id="totp-policy-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p id="totp-policy-status" class="form-state" role="status" aria-live="polite">Loading authentication policy…</p>
+        </form>
+        <section id="totp-policy-pending" class="panel hidden" aria-live="polite">
+          <h2>Pending policy change</h2>
+          <p id="totp-policy-pending-summary"></p>
+          <div class="actions">
+            <button id="totp-policy-approve" type="button">Approve policy change</button>
+          </div>
+        </section>
+      </section>
+
+      <!-- Privileged users -->
+      <section class="view" id="view-privileged" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Administrative governance</p>
+          <h1>Privileged users</h1>
+        </div>
+        <section class="panel governance-mode-panel" id="governance-mode-panel" aria-labelledby="governance-mode-heading">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Install-level policy</p>
+              <h2 id="governance-mode-heading">Governance mode</h2>
+            </div>
+            <span id="governance-mode-badge" class="status-pill status-unknown">Loading…</span>
+          </div>
+          <p id="governance-mode-summary">Loading the current authorization policy…</p>
+          <p class="hint"><strong>Governed scope:</strong> privileged role grants, privileged password/TOTP resets, and governance downgrade. Account activation/deactivation and other administrative settings retain their existing direct controls.</p>
+          <p id="governance-mode-prerequisite" class="hint"></p>
+          <div class="actions" id="governance-mode-actions">
+            <button id="governance-enable-dual" type="button" class="hidden" aria-describedby="governance-mode-prerequisite governance-mode-status">Enable Dual control</button>
+            <button id="governance-request-single" type="button" class="danger hidden" aria-describedby="governance-mode-prerequisite governance-mode-status">Request Single administrator mode</button>
+          </div>
+          <p id="governance-mode-status" class="form-state" role="status" aria-live="polite">Checking governance status…</p>
+        </section>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Pending admin proposals</h2>
+            <button id="refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p id="proposal-flow-summary">Loading the current approval policy…</p>
+          <div id="proposal-table"></div>
+        </section>
+        <section class="grid">
+          <form id="privileged-role-form" class="panel">
+            <h2>Create privileged user</h2>
+            <label>User ID <input name="id" required></label>
+            <label>Email <input name="email" type="email" required></label>
+            <label>Role
+              <select name="role">
+                <option value="superuser">Certificate Operator</option>
+                <option value="admin">Administrator</option>
+                <option value="auditor">Auditor</option>
+              </select>
+            </label>
+            <label>Temporary password <input name="temporary_password" type="password" minlength="16" required></label>
+            <button type="submit" class="privileged-change-submit">Create proposal</button>
+          </form>
+
+          <form id="privileged-password-reset-form" class="panel">
+            <h2>Privileged password reset</h2>
+            <label>Privileged user
+              <select name="target_user_id" id="privileged-password-user-select" required></select>
+            </label>
+            <label>Temporary password <input name="temporary_password" type="password" minlength="16" required></label>
+            <button type="submit" class="privileged-change-submit">Create proposal</button>
+          </form>
+
+          <form id="privileged-totp-reset-form" class="panel">
+            <h2>Privileged TOTP reset</h2>
+            <label>Privileged account
+              <select name="target_user_id" id="privileged-totp-user-select" required></select>
+            </label>
+            <button type="submit" class="privileged-change-submit">Create proposal</button>
+          </form>
+        </section>
+        <section class="panel" id="login-accounts-panel">
+          <div class="toolbar">
+            <h2>Login accounts</h2>
+            <button id="login-accounts-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p id="login-accounts-governance-note">All portal login accounts. The current governance mode determines whether privileged role grants and password/TOTP resets apply immediately or wait for another administrator.</p>
+          <div id="login-accounts-table"></div>
+        </section>
+        <div id="login-accounts-actionbar"></div>
+      </section>
+
+      <!-- HSM & Keys -->
+      <section class="view" id="view-hsm" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Key material &amp; recovery</p>
+          <h1>HSM &amp; Keys</h1>
+        </div>
+        <section class="grid">
+          <section class="panel">
+            <div class="toolbar">
+              <h2>Hardware security module</h2>
+              <button id="hsm-refresh" type="button" class="secondary">Refresh</button>
+            </div>
+            <p id="hsm-status">HSM status not loaded yet.</p>
+            <div class="actions">
+              <button id="hsm-self-test" type="button">Run self-test</button>
+            </div>
+          </section>
+
+          <form id="hsm-pin-form" class="panel">
+            <h2>Unlock token PIN</h2>
+            <p>The User PIN is held only for your session and dropped on logout, lock, or restart.</p>
+            <label>User PIN
+              <span class="info-tip" tabindex="0" role="button" aria-label="User PIN help">ⓘ
+                <span class="tip-bubble" role="tooltip">SmartCard-HSM User PINs are numeric and must be 6 to 15 digits. Example for a lab token: 648219.</span>
+              </span>
+              <input name="pin" type="password" required
+                inputmode="numeric"
+                pattern="[0-9]{6,15}"
+                title="Use 6 to 15 digits for a SmartCard-HSM User PIN">
+            </label>
+            <div class="actions">
+              <button type="submit">Unlock PIN</button>
+              <button id="hsm-pin-lock" type="button" class="danger">Lock PIN</button>
+            </div>
+          </form>
+
+          <form id="hsm-policy-form" class="panel">
+            <h2>Who may unlock the token</h2>
+            <p>Certificate Operators issue certificates, so by default they may unlock the token to sign with it: the operator whose approval mints a certificate is asked for the User PIN at that moment. Administrators can always unlock.</p>
+            <label class="checkbox">
+              <input type="checkbox" id="hsm-operator-unlock" name="operator_unlock_allowed" checked />
+              Allow Certificate Operators to unlock the HSM PIN (recommended)
+            </label>
+            <p class="hint">Turn this off only to enforce separation of duties, where the operator authorizes issuance and an administrator controls the key. Operators are then told to ask an administrator to unlock, and their approval is not recorded until the token is open.</p>
+            <div class="actions">
+              <button type="submit">Save unlock policy</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="cloud-signing-panel" class="panel hidden">
+          <div class="toolbar">
+            <div>
+              <h2>Cloud keys &amp; signing queue</h2>
+              <p class="hint">Private keys remain non-exportable. Transient signing failures retry for up to 24 hours; jobs delayed for 15 minutes are operational alerts. There is never a local-key fallback.</p>
+            </div>
+            <button id="cloud-signing-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <h3>Registered keys</h3>
+          <div id="cloud-key-table"></div>
+          <h3>Recent signing jobs</h3>
+          <p id="cloud-signing-status" class="hint">Cloud queue status not loaded yet.</p>
+          <div id="cloud-signing-job-table"></div>
+        </section>
+
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Token keys</h2>
+            <button id="hsm-keys-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p id="hsm-key-recovery-hint" class="hint"><strong>Retirement uses a fixed 30-day grace period.</strong> Managed keys are destroyed by the cleanup worker only after the deadline; attached/external keys are detached. Native SmartCard-HSM backups are available below when the token has a complete DKEK.</p>
+          <form id="hsm-key-form" class="inline-form">
+            <label>Label <input name="label" required placeholder="online-issuer"></label>
+            <label>Algorithm
+              <select name="algorithm">
+                <option value="rsa-2048">rsa-2048</option>
+                <option value="rsa-3072">rsa-3072</option>
+                <option value="rsa-4096">rsa-4096</option>
+                <option value="ecdsa-p256">ecdsa-p256</option>
+                <option value="ecdsa-p384">ecdsa-p384</option>
+              </select>
+            </label>
+            <button id="hsm-key-generate" type="submit">Generate key</button>
+          </form>
+          <p id="hsm-key-status" class="hint" role="status" aria-live="polite"></p>
+          <div id="hsm-key-table"></div>
+        </section>
+
+        <section id="hsm-dkek-disabled-notice" class="panel hidden">
+          <h2>DKEK recovery disabled</h2>
+          <p class="danger-text"><strong>This token was initialized without DKEK shares.</strong> Its Sub CA key cannot be wrapped, recovered, or migrated to another HSM. Enabling migration requires destructive token reinitialization and replacement of the Sub CA.</p>
+        </section>
+
+        <section id="hsm-dkek-controls" class="panel">
+          <div class="toolbar">
+            <h2>DKEK backup shares</h2>
+            <button id="hsm-dkek-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p class="hint">DKEK shares are created only during Setup. SmartCard-HSM DKEK is N-of-N: every share has its own password and needs redundant copies in separate locations. Deleting a server copy never deletes external copies.</p>
+          <p id="hsm-dkek-status">DKEK status not loaded yet.</p>
+          <div id="hsm-dkek-table"></div>
+        </section>
+
+        <section id="hsm-raw-backup-controls" class="panel">
+          <h2>Export native HSM backups</h2>
+          <p class="hint">Requests one untouched OpenSC SmartCard-HSM <code>.bin</code> file per live token key in a plain ZIP transport. A different administrator must approve the request; the approving administrator unlocks the User PIN before the archive is generated. The archive contains no DKEK shares, passwords, PINs, database state, or application metadata.</p>
+          <div class="actions">
+            <button id="hsm-raw-backup-export" type="button" class="danger">Request native HSM backup export</button>
+          </div>
+          <p id="hsm-raw-backup-status" class="hint" role="status" aria-live="polite"></p>
+        </section>
+
+      </section>
+
+      <!-- Application backups -->
+      <section class="view" id="view-backups" hidden>
+        <div class="view-header">
+          <div>
+            <p class="eyebrow">Portable recovery</p>
+            <h1>Backups</h1>
+          </div>
+          <button id="backups-refresh" type="button" class="secondary">Refresh</button>
+        </div>
+
+        <section class="panel">
+          <div class="toolbar">
+            <div>
+              <h2>Application backup status</h2>
+              <p class="hint">A completed backup is an encrypted archive delivered to the approving administrator. Off-host storage and restore success cannot be verified by myOwnCA.</p>
+            </div>
+            <span id="backups-freshness" class="status-pill status-unknown">Not created</span>
+          </div>
+          <p id="backups-status" role="status" aria-live="polite">Loading backup status…</p>
+          <div class="actions">
+            <button id="backups-request" type="button" class="danger">Request application backup</button>
+          </div>
+        </section>
+
+        <div class="dashboard-summary-grid">
+          <section class="panel">
+            <h2>Included</h2>
+            <ul id="backups-included"></ul>
+          </section>
+          <section class="panel">
+            <h2>Excluded</h2>
+            <ul id="backups-excluded"></ul>
+          </section>
+        </div>
+
+        <section class="panel">
+          <h2>Pending request</h2>
+          <p class="hint">The requester and approver each retain a separate passphrase share. Both original shares are required by the offline restore command.</p>
+          <div id="backups-pending"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Export history</h2>
+          <div id="backups-history"></div>
+        </section>
+      </section>
+
+      <!-- Random number source -->
+      <section class="view" id="view-entropy" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Software key generation</p>
+          <h1>Random number source</h1>
+        </div>
+        <section class="grid">
+          <form id="entropy-form" class="panel">
+            <h2>Random number source</h2>
+            <p class="hint">
+              Software key generation always uses the OS CSPRNG; bytes from an external device
+              (e.g. /dev/trng, /dev/hwrng) are mixed in additively before each generation —
+              server-generated keys, sub-CA keys, and service-cert keys alike. PKCS#11 tokens
+              use their own hardware RNG. A configured but unreadable device blocks generation
+              (fail-closed).
+            </p>
+            <p id="entropy-status">Random source status not loaded yet.</p>
+            <label>Device path (empty = OS CSPRNG only)
+              <input name="entropy_source" placeholder="/dev/hwrng">
+            </label>
+            <div class="actions">
+              <button id="entropy-validate" type="button" class="secondary">Validate source</button>
+              <button type="submit">Save</button>
+            </div>
+            <p id="entropy-form-state" class="form-state" role="status" aria-live="polite">Loading saved setting…</p>
+          </form>
+        </section>
+      </section>
+
+      <!-- Auditing -->
+      <section class="view" id="view-auditing" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Tamper evidence &amp; forwarding</p>
+          <h1>Auditing</h1>
+        </div>
+        <section class="grid">
+          <form id="syslog-form" class="panel">
+            <h2>Remote syslog (audit forwarding)</h2>
+            <p>Forward every audit event to a remote syslog collector (RFC 5424).</p>
+            <p class="config-source">Source: application database. Changes made here persist across service restarts.</p>
+            <label class="checkbox"><input id="syslog-enabled" name="enabled" type="checkbox"> Enabled</label>
+            <label>Host <input name="host" placeholder="logs.example.test"></label>
+            <label>Port <input name="port" type="number" value="514" min="1" max="65535"></label>
+            <label>Protocol
+              <select name="protocol"><option value="udp">udp</option><option value="tcp">tcp</option><option value="tls">tls</option></select>
+            </label>
+            <label>Facility <input name="facility" type="number" value="13" min="0" max="23"></label>
+            <button type="submit">Save syslog settings</button>
+            <p id="syslog-form-state" class="form-state" role="status" aria-live="polite">Loading saved settings…</p>
+          </form>
+
+          <section class="panel">
+            <div class="toolbar">
+              <h2>Audit log integrity</h2>
+              <button id="audit-verify" type="button" class="secondary">Verify chain</button>
+            </div>
+            <p id="audit-integrity">The audit trail is hash-chained and tamper-evident.</p>
+            <p>Full audit history is available in the <a href="/app/auditor">auditor portal</a>.</p>
+          </section>
+        </section>
+      </section>
+
+      <!-- CA management -->
+      <section class="view" id="view-ca" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Trust anchors &amp; ceremonies</p>
+          <h1>CA management</h1>
+        </div>
+        <section class="panel" id="issuer-status-panel">
+          <div class="toolbar">
+            <h2>Immutable trust chain</h2>
+            <div class="actions">
+              <button id="refresh-issuer" type="button" class="secondary">Refresh</button>
+              <button id="root-cert-refresh" type="button" class="secondary">Refresh Root CA</button>
+            </div>
+          </div>
+          <p class="hint">The Root CA and initial issuing Sub CA were verified and activated during first-run setup. They cannot be replaced, imported, or regenerated while the service is running.</p>
+          <p id="issuer-status">Issuer status not loaded yet.</p>
+          <p id="root-cert-status">Root certificate status not loaded yet.</p>
+          <button id="crl-button" type="button">Queue issuer CRL refresh</button>
+          <pre id="crl-status" class="code-block">CRL status not loaded yet.</pre>
+        </section>
+
+        <section class="panel" id="service-urls-panel">
+          <div class="toolbar">
+            <h2>Service URLs</h2>
+            <button id="service-urls-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p class="hint">
+            Public URLs for this CA. The CRL and AIA bases are where the revocation list
+            (<code>/crl/&lt;issuer&gt;.crl</code>) and issuer cert (<code>/aia/&lt;issuer&gt;.cer</code>)
+            are served, and what gets embedded in new certificates; OCSP is embedded when the OCSP
+            responder is enabled. Empty fields are pre-filled with defaults derived from the portal
+            host — review and Save to apply. The Administrator and Certificate Operator bases are stored for reference; the
+            frontend (holder) portal URL lives in the Holder portal settings.
+          </p>
+          <p id="service-urls-source" class="config-source">Loading configuration sources…</p>
+          <form id="service-urls-form">
+            <label>CRL base URL <input name="crl_base_url" type="url" placeholder="http://ca.example.com"></label>
+            <div class="effective-setting"><p id="service-urls-crl-effective" class="hint"></p><button id="service-urls-copy-crl" type="button" class="secondary compact">Copy CRL URL</button></div>
+            <label>AIA base URL <input name="aia_base_url" type="url" placeholder="http://ca.example.com"></label>
+            <div class="effective-setting"><p id="service-urls-aia-effective" class="hint"></p><button id="service-urls-copy-aia" type="button" class="secondary compact">Copy AIA URL</button></div>
+            <label>OCSP responder URL <input name="ocsp_url" type="url" placeholder="http://ca.example.com/ocsp"></label>
+            <label>Admin base URL <input name="admin_base_url" type="url" placeholder="https://admin.example.com"></label>
+            <label>Certificate Operator base URL <input name="superuser_base_url" type="url" placeholder="https://operator.example.com"></label>
+            <button type="submit">Save service URLs</button>
+            <p id="service-urls-form-state" class="form-state" role="status" aria-live="polite">Loading saved settings…</p>
+          </form>
+        </section>
+
+        <section class="panel" id="ocsp-panel">
+          <div class="toolbar">
+            <h2>OCSP responder</h2>
+            <button id="ocsp-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <p class="hint">
+            Pre-produced OCSP responses served at <code>/ocsp</code> (off by default). When enabled,
+            new certificates carry an OCSP AuthorityInformationAccess pointing at the OCSP base URL
+            (set under Service URLs). The delegated responder certificate is renewed automatically
+            when the HSM is unlocked.
+          </p>
+          <p id="ocsp-status" class="hint"></p>
+          <form id="ocsp-form">
+            <p class="config-source">Source: application database. Changes made here persist across service restarts.</p>
+            <label class="checkbox"><input type="checkbox" id="ocsp-enabled" name="enabled"> Enable OCSP responder</label>
+            <label>Responder certificate validity (days)
+              <input name="responder_validity_days" type="number" min="1" value="30">
+            </label>
+            <div class="actions">
+              <button type="submit">Save OCSP settings</button>
+            </div>
+            <p id="ocsp-form-state" class="form-state" role="status" aria-live="polite">Loading saved settings…</p>
+          </form>
+          <div class="actions panel-actions">
+            <button id="ocsp-generate" type="button">Generate OCSP responses now</button>
+          </div>
+        </section>
+
+      </section>
+
+      <!-- People -->
+      <section class="view" id="view-people" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Certificate holders</p>
+          <h1>People</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>People</h2>
+            <div class="actions">
+              <button id="admin-people-add-import" type="button">Add person + import</button>
+              <button id="admin-people-refresh" type="button" class="secondary">Refresh</button>
+            </div>
+          </div>
+          <p>Import an existing certificate for a registered person, or create the person and certificate record atomically.</p>
+          <div id="admin-people-table"></div>
+        </section>
+      </section>
+
+      <!-- Devices -->
+      <section class="view" id="view-devices" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Registered devices</p>
+          <h1>Devices</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Devices</h2>
+            <div class="actions">
+              <button id="admin-devices-add-import" type="button">Add device + import</button>
+              <button id="admin-devices-refresh" type="button" class="secondary">Refresh</button>
+            </div>
+          </div>
+          <p>Import an existing certificate for a device, or add the device and certificate record in one transaction.</p>
+          <div id="admin-devices-table"></div>
+        </section>
+      </section>
+
+      <!-- Templates -->
+      <section class="view" id="view-templates" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Certificate profile templates</p>
+          <h1>Templates</h1>
+        </div>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Templates</h2>
+            <button id="templates-refresh" type="button" class="secondary">Refresh</button>
+          </div>
+          <div id="template-table"></div>
+        </section>
+        <div id="templates-actionbar"></div>
+      </section>
+
+      <!-- Holder portal -->
+      <section class="view" id="view-holder" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Secure links for certificate holders</p>
+          <h1>Holder portal</h1>
+        </div>
+        <section class="grid grid-2">
+          <form id="holder-portal-form" class="panel">
+            <h2>Link composition &amp; delivery</h2>
+            <p class="hint">
+              Public base URL used to compose secure claim links sent to certificate
+              holders. Download receipts email the holder whenever a key-bearing bundle
+              is fetched through a link.
+            </p>
+            <p id="holder-portal-status">Holder portal status not loaded yet.</p>
+            <label>Portal base URL <input name="portal_base_url" placeholder="https://ca.example.com"></label>
+            <label class="checkbox"><input name="download_receipts" type="checkbox" checked> Send download receipts</label>
+            <p class="hint">
+              Renewal links prefer mTLS proof-of-possession: terminate client-cert TLS on a
+              reverse proxy and forward the cert with the shared secret (<a href="#" id="mtls-help-link">see "Reverse proxy (mTLS) setup"</a>). Without
+              it, renewals fall back to email codes + mandatory Certificate Operator approval.
+            </p>
+            <label>mTLS base URL (renewal links) <input name="mtls_base_url" placeholder="https://renew.ca.example.com:8443"></label>
+            <label>mTLS proxy shared secret <input name="mtls_proxy_secret" type="password" placeholder="leave blank to keep current" autocomplete="new-password"></label>
+            <label>Key orphan grace period (fixed policy, days)
+              <input name="server_key_purge_days" type="number" min="30" max="30" value="30" readonly>
+            </label>
+            <p class="hint">The 30 days start when the final active binding is removed by revocation, expiry, replacement, archive, cancellation, or rejection. This grace period cannot be bypassed.</p>
+            <button type="submit">Save</button>
+          </form>
+
+          <section class="panel">
+            <h2>How holders use it</h2>
+            <p>
+              Certificate Operators send single-purpose claim links (delivery, renewal, enrollment) from
+              their portal; unknown people can apply via the public
+              <a href="/request-access">request-access page</a>. Links require an email
+              verification code; tokens are stored hashed and can be revoked at any time from
+              the Certificate Operator portal's <em>Secure links</em> panel.
+            </p>
+          </section>
+
+          <section class="panel grid-full" id="access-request-panel">
+            <h2>Self-service certificate requests</h2>
+            <p>Controls the public "Request a certificate" link on the login page. When enabled, only the listed email domains may submit a request.</p>
+            <label class="checkbox"><input id="access-request-enabled" type="checkbox"> Enable self-service requests</label>
+            <label>Allowed email domains
+              <textarea id="access-request-domains" rows="4" placeholder="example.com, *.example.com"></textarea>
+            </label>
+            <p class="hint">One per line or comma-separated. Exact (example.com) or a leading wildcard (*.example.com, any subdomain). Empty list = nobody can request.</p>
+            <div class="actions">
+              <button id="access-request-save" type="button">Save</button>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <!-- Notifications & integrations -->
+      <section class="view" id="view-channels" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Delivery &amp; external systems</p>
+          <h1>Notifications &amp; integrations</h1>
+        </div>
+        <section class="panel notification-schedule" id="notification-schedule"></section>
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Delivery integrations</h2>
+            <div class="actions">
+              <button id="comms-refresh" type="button" class="secondary">Refresh</button>
+              <button id="comms-configure" type="button" class="secondary">Configure channel</button>
+              <button id="comms-send-test" type="button" class="secondary">Send test</button>
+            </div>
+          </div>
+          <p>Connect email, SMS, Slack, webhooks, or custom HTTPS delivery. Message content and recipients are supplied per send.</p>
+          <div id="comms-table"></div>
+        </section>
+
+        <details class="panel advanced-panel">
+          <summary><span>Advanced integration field reference</span><span class="summary-hint">Raw configuration keys for API and troubleshooting use</span></summary>
+          <div class="advanced-panel-content">
+          <pre class="notice">email config: {"host","port","security":"none|starttls|ssl","username","from_address"}
+email secrets: {"password"}
+
+sms config: {"url","method":"POST|GET|PUT","recipient_param","message_param","extra_params":{},"headers":{},"body_template"}
+sms secrets: {"bearer_token","password"}  (recipient: phone)
+  GET sends the parameters in the query string; POST/PUT send them in the body,
+  form-encoded when Content-Type is application/x-www-form-urlencoded, else JSON.
+  extra_params carries the broker's static fields (account, sender, type); a value
+  may reference {password} or {bearer_token} so the credential stays encrypted
+  rather than sitting in the cleartext config. Headers are HTTP headers, not
+  broker parameters. Defaults are to=phone and message=text; body_template
+  overrides the parameters and is rejected with GET, which has no body.
+  Example (curl -d user=... -d pass=... -d number=... -d text=...):
+    method POST, Content-Type: application/x-www-form-urlencoded,
+    phone parameter "number", message parameter "text",
+    extra parameters: user=myaccount / pass={password} / type=sms / from=MyName
+
+slack secrets: {"bot_token"}  (recipient: handle, email, or user id)
+  bot token scopes: chat:write, im:write, users:read, users:read.email
+  (reinstall the Slack app after changing scopes; the token value changes)
+
+webhook config: {"url"}
+webhook secrets: {"signing_secret"}  (optional HMAC)
+
+https config: {"url","method","headers":{},"body_template"}
+https secrets: {"bearer_token"}  (optional)
+body_template placeholders: {recipient} {subject} {body}</pre>
+          </div>
+        </details>
+      </section>
+
+      <!-- License -->
+      <section class="view" id="view-license" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Usage tier</p>
+          <h1>License</h1>
+        </div>
+        <section class="grid">
+          <section class="panel">
+            <div class="toolbar">
+              <h2>Current license</h2>
+              <button id="license-refresh" type="button" class="secondary">Refresh</button>
+            </div>
+            <p class="hint">
+              Free for up to 10 active certificate lineages. A renewal stays in its original
+              lineage when holder, template, subject and SANs do not change. Revocation,
+              CRLs, OCSP and export are never license-gated.
+            </p>
+            <div class="effective-setting">
+              <p class="hint">Installation ID: <code id="license-installation-id">loading…</code></p>
+              <button id="license-copy-installation" type="button" class="secondary compact">Copy installation ID</button>
+            </div>
+            <p id="license-status">License status not loaded yet.</p>
+            <div id="license-detail"></div>
+            <div class="actions">
+              <button id="license-remove" type="button" class="danger hidden">Remove license</button>
+            </div>
+          </section>
+
+          <form id="license-form" class="panel">
+            <h2>Upload a license</h2>
+            <p class="hint">Paste the signed <code>.lic</code> token from your vendor.</p>
+            <label>License token
+              <textarea name="token" rows="6" required placeholder="eyJ….…"></textarea>
+            </label>
+            <button type="submit">Install license</button>
+          </form>
+        </section>
+      </section>
+
+      <!-- Activity / details (kept #output for BB.setOutput compatibility) -->
+      <section class="view" id="view-logs" hidden>
+        <div class="view-header">
+          <p class="eyebrow">Audit history, action output &amp; support detail</p>
+          <h1>Activity &amp; diagnostics</h1>
+        </div>
+        <section class="panel dashboard-region" id="activity-changes-region" aria-labelledby="activity-changes-title">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Accountability</p>
+              <h2 id="activity-changes-title">Recent changes</h2>
+            </div>
+            <a class="button-link secondary compact" href="#/auditing">Audit settings</a>
+          </div>
+          <div id="activity-changes" class="dashboard-region-content" aria-busy="true">
+            <p class="loading-state">Loading recent administrative activity…</p>
+          </div>
+          <p id="activity-changes-freshness" class="freshness" role="status" aria-live="polite"></p>
+        </section>
+        <section id="details-drawer" class="panel output-panel">
+          <div class="output-heading">
+            <h2>Details</h2>
+            <button id="drawer-close" type="button" class="secondary">Clear</button>
+          </div>
+          <pre id="output">Admin actions and setup responses appear here.</pre>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <template id="tpl-ceremony-help">
+    <div id="ceremony-help-content"><p>Loading ceremony guidance…</p></div>
+  </template>
+
+  <template id="tpl-template-form">
+    <form id="template-form" aria-describedby="template-form-intro template-summary template-dirty-state">
+      <p id="template-form-intro" class="hint">Templates turn certificate policy into a reusable, human-readable profile. Start with a profile, then review the usage and approval settings.</p>
+      <label>Template identifier <input name="id" required placeholder="host-tls" aria-describedby="template-id-help"></label>
+      <p id="template-id-help" class="field-help">A stable identifier used by integrations. It cannot be changed after creation.</p>
+      <label>Display name <input name="name" required placeholder="Production server TLS"></label>
+      <label>Certificate purpose
+        <select name="profile" id="template-profile">
+          <option value="host_tls">Server TLS</option>
+          <option value="user_auth">User / client authentication</option>
+          <option value="smime">Email protection (S/MIME)</option>
+        </select>
+      </label>
+      <p id="template-profile-summary" class="field-help"></p>
+      <fieldset>
+        <legend>Allowed key operations</legend>
+        <div id="key-usage-options" class="checkbox-grid"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Allowed application purposes</legend>
+        <div id="extended-key-usage-options" class="checkbox-grid"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Allowed certificate key algorithms</legend>
+        <div id="allowed-key-algorithm-options" class="checkbox-grid"></div>
+      </fieldset>
+      <label>Certificate lifetime (days) <input name="validity_days" type="number" value="365" min="1"></label>
+      <label>Approvals for first issuance <input name="first_issuance_approvals" type="number" value="2" min="0" aria-describedby="template-first-approval-help"></label>
+      <p id="template-first-approval-help" class="field-help"></p>
+      <label>Approvals for renewal <input name="renewal_approvals" type="number" value="1" min="0" aria-describedby="template-renewal-approval-help"></label>
+      <p id="template-renewal-approval-help" class="field-help"></p>
+      <section class="form-summary" aria-labelledby="template-summary-title">
+        <h3 id="template-summary-title">Policy summary</h3>
+        <p id="template-summary" role="status" aria-live="polite"></p>
+      </section>
+      <p id="template-dirty-state" class="form-state" role="status" aria-live="polite">Review the settings before saving.</p>
+      <button type="submit">Save template</button>
+    </form>
+  </template>
+
+  <template id="tpl-user-form">
+    <form id="user-form">
+      <label>User ID <input name="id" required placeholder="user-1"></label>
+      <label>Email <input name="email" type="email" required placeholder="user@example.test"></label>
+      <input name="role" type="hidden" value="user">
+      <label>Temporary password <input name="temporary_password" type="password" minlength="16" required></label>
+      <button type="submit">Create user</button>
+    </form>
+  </template>
+
+  <template id="tpl-reset-form">
+    <form id="reset-form">
+      <p>Set a new temporary password. The user must change it on next login.</p>
+      <label>Temporary password <input name="temporary_password" type="password" minlength="16" required></label>
+      <button type="submit">Reset password</button>
+    </form>
+  </template>
+
+  <template id="tpl-comms-config-form">
+    <form id="comms-config-form">
+      <label>Channel
+        <select name="channel" id="comms-config-channel">
+          <option value="email">email (SMTP/SMTPS)</option>
+          <option value="sms">sms (HTTPS broker)</option>
+          <option value="slack">slack (bot DM)</option>
+          <option value="webhook">webhook</option>
+          <option value="https">https (custom request)</option>
+        </select>
+      </label>
+      <label class="checkbox"><input name="enabled" type="checkbox"> Enabled</label>
+      <p id="comms-config-help" class="hint"></p>
+      <div id="comms-config-fields"></div>
+      <p class="config-source">Source: encrypted application database. Saved values persist across restarts; existing secrets stay in place when their fields are blank.</p>
+      <p id="comms-config-state" class="form-state" role="status" aria-live="polite">Review settings before saving.</p>
+      <button type="submit">Save integration</button>
+    </form>
+  </template>
+
+  <template id="tpl-comms-send-form">
+    <form id="comms-send-form">
+      <label>Channel
+        <select name="channel">
+          <option value="email">email</option>
+          <option value="sms">sms</option>
+          <option value="slack">slack</option>
+          <option value="webhook">webhook</option>
+          <option value="https">https</option>
+        </select>
+      </label>
+      <label>Recipient <input name="recipient" required placeholder="alice@example.test / @alice"></label>
+      <label>Subject <input name="subject" placeholder="(optional)"></label>
+      <label>Body <textarea name="body" rows="4" required></textarea></label>
+      <p id="comms-test-state" class="form-state" role="status" aria-live="polite">A successful test is recorded in Production readiness.</p>
+      <button type="submit">Send test</button>
+    </form>
+  </template>
+
+  <template id="tpl-sms-params-help">
+    <div>
+      <p>Most SMS brokers expect a flat set of request fields: an account, a password, a sender name, the phone number and the text. Name the phone and text fields above, then list everything else here, one <code>name=value</code> per line.</p>
+      <p><strong>Do not put these in HTTP headers.</strong> They are request parameters, not headers, and the headers box only accepts <code>Name: value</code> lines — anything else is rejected.</p>
+      <p>Worked example. For a broker documented as:</p>
+      <pre>curl -d 'user=myaccount' -d 'pass=SECRET' -d 'type=sms' \
+     -d 'from=MyCompany' -d "number=$phone" -d "text=$msg" \
+     https://api.broker.example/sms.php</pre>
+      <p>configure:</p>
+      <pre>HTTP method            POST
+Phone number parameter number
+Message text parameter text
+Extra parameters       user=myaccount
+                       pass={password}
+                       type=sms
+                       from=MyCompany
+HTTP headers           Content-Type: application/x-www-form-urlencoded
+Broker password        SECRET</pre>
+      <p>The <code>Content-Type</code> header is what selects form encoding (what <code>curl -d</code> sends). Without it the body is sent as JSON. With <strong>GET</strong> the same parameters go into the query string instead, and any query already present in the URL is preserved.</p>
+      <p>Never type a password directly into a parameter value: the channel configuration is stored unencrypted. Write <code>{password}</code> and put the real value in the Broker password field, which is encrypted at rest.</p>
+    </div>
+  </template>
+
+  <template id="tpl-sms-headers-help">
+    <div>
+      <p>This box sets real HTTP headers, one <code>Name: value</code> per line. Use it for content negotiation and for brokers that authenticate with a header rather than a request field.</p>
+      <pre>Content-Type: application/x-www-form-urlencoded
+X-Api-Key: {password}
+Authorization: Basic {bearer_token}</pre>
+      <p><strong>Secrets belong in placeholders.</strong> Header and parameter values may contain <code>{password}</code> or <code>{bearer_token}</code>; both are replaced from the encrypted secret fields when the message is sent. The channel configuration itself is stored in the clear, so a credential written literally here would be readable in the database.</p>
+      <p>Referencing a placeholder whose secret is not set is rejected at send time rather than transmitting an empty credential.</p>
+      <p>If you only need a standard bearer token, leave the header out entirely: setting the Bearer token secret adds <code>Authorization: Bearer …</code> on its own.</p>
+    </div>
+  </template>
+
+  <template id="tpl-slack-scopes-help">
+    <div>
+      <p>The bot token must carry every scope the delivery path uses. A missing one fails with <code>missing_scope</code>, naming no scope, and each call is checked in turn — so fixing one reveals the next.</p>
+      <p>In your Slack app: <strong>OAuth &amp; Permissions → Bot Token Scopes</strong>, add all four:</p>
+      <pre>chat:write
+im:write
+users:read
+users:read.email</pre>
+      <p>What each is for:</p>
+      <ul>
+        <li><code>chat:write</code> — post the message. Always needed.</li>
+        <li><code>im:write</code> — open the direct-message conversation. Always needed.</li>
+        <li><code>users:read</code> — look up a recipient given as an <code>@handle</code>.</li>
+        <li><code>users:read.email</code> — look up a recipient given as an email address.</li>
+      </ul>
+      <p><strong>Reinstall the app afterwards.</strong> Scope changes do nothing to an already-issued token; Slack shows a "reinstall your app" banner once you save. Reinstalling issues a <em>new</em> <code>xoxb-…</code> token, so paste that new value here — keeping the old one reproduces the same error.</p>
+      <p>To test without waiting on a reinstall, use your Slack member ID (profile → Copy member ID, <code>U…</code>) as the recipient. That skips both lookups, needing only <code>chat:write</code> and <code>im:write</code>.</p>
+    </div>
+  </template>
+
+  <template id="tpl-mtls-proxy-help">
+    <div class="mtls-help">
+      <p class="hint">
+        Renewal links use mTLS proof-of-possession. Terminate client-certificate TLS on a
+        reverse proxy that forwards the verified client certificate and a shared secret to
+        myOwnCA. Set <strong>mTLS base URL</strong> (in the Link composition form) to the proxy's
+        public URL and put the same secret into <strong>mTLS proxy shared secret</strong>.
+      </p>
+      <p class="hint">Example nginx server block:</p>
+      <pre>server {
+    listen 8443 ssl;
+    server_name renew.ca.example.com;
+    ssl_certificate     /etc/nginx/tls/server.crt;      # this proxy's server cert
+    ssl_certificate_key /etc/nginx/tls/server.key;
+    ssl_client_certificate /etc/nginx/tls/ca-chain.pem; # your CA chain (verifies holders)
+    ssl_verify_client   on;
+    ssl_verify_depth    2;
+    location / {
+        proxy_pass http://127.0.0.1:8000;               # the myOwnCA service
+        proxy_set_header Host             $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header x-bb-client-cert $ssl_client_escaped_cert;  # URL-encoded PEM
+        proxy_set_header x-bb-proxy-auth  "PASTE-THE-SHARED-SECRET";  # = the field in the form
+    }
+}</pre>
+      <p class="hint">
+        The shared secret prevents header spoofing — only the proxy should reach the app on
+        that path; myOwnCA ignores the <code>x-bb-*</code> headers unless
+        <code>x-bb-proxy-auth</code> matches.
+      </p>
+    </div>
+  </template>
+
+  <script src="/app/assets/app_shared.js?v=22"></script>
+  <script src="/app/assets/leaf-import.js?v=1"></script>
+  <script src="/app/assets/admin-dashboard.js?v=14"></script>
+  <script src="/app/assets/admin-backup.js?v=1"></script>
+  <script src="/app/assets/notification-schedule.js?v=2"></script>
+  <script src="/app/assets/admin.js?v=29"></script>
+</body>
+</html>

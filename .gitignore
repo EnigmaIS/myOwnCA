@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+var/
+.env
+tools/*
+!tools/license-issuer/
+tools/license-issuer/*
+!tools/license-issuer/README.md
+!tools/license-issuer/pyproject.toml
+!tools/license-issuer/Dockerfile
+!tools/license-issuer/compose.yaml
+!tools/license-issuer/run
+!tools/license-issuer/src/
+
+# Operator-provided TLS material for the Docker proxy (keys must never be committed)
+/tls/*.crt
+/tls/*.key
+/tls/*.pem
+build/

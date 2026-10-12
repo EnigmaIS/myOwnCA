@@ -1,0 +1,14 @@
+name: myownca-license-issuer
+
+services:
+  issuer:
+    build:
+      context: .
+    image: myownca-license-issuer:local
+    user: "${LICENSE_ISSUER_UID:-1000}:${LICENSE_ISSUER_GID:-1000}"
+    environment:
+      MYOWNCA_LICENSE_KEY_PASSWORD: "${MYOWNCA_LICENSE_KEY_PASSWORD:-}"
+    volumes:
+      - type: bind
+        source: "${PWD:?PWD must identify the invocation directory}"
+        target: /work

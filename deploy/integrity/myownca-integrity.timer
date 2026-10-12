@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily independent myOwnCA integrity check
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15m
+Unit=myownca-integrity.service
+
+[Install]
+WantedBy=timers.target

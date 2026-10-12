@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>myOwnCA — Secure link</title>
+  <link rel="stylesheet" href="/app/assets/app.css?v=21">
+</head>
+<body>
+  <header class="hero">
+    <img class="portal-brand-logo" src="/branding/logo" alt="myOwnCA logo">
+    <div class="license-identity" data-license-identity hidden aria-live="polite"></div>
+    <p class="eyebrow">myOwnCA secure link</p>
+    <h1 id="claim-title">Certificate delivery</h1>
+    <p id="claim-subtitle">Checking your link…</p>
+  </header>
+
+  <main>
+    <section id="panel-unusable" class="panel hidden">
+      <h2>This link can no longer be used</h2>
+      <p id="unusable-reason"></p>
+      <p>If you still need your certificate, ask your administrator to issue a new link.</p>
+    </section>
+
+    <section id="panel-otp" class="panel hidden">
+      <h2>Verify it's you</h2>
+      <p>For your security we'll email a 6-digit code to <strong id="recipient-hint"></strong>.</p>
+      <button id="otp-send" type="button">Email me the code</button>
+      <form id="otp-form" class="hidden">
+        <label>Verification code
+          <input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        </label>
+        <button type="submit">Verify</button>
+      </form>
+      <p id="otp-status" class="hint"></p>
+    </section>
+
+    <section id="panel-delivery" class="panel hidden">
+      <h2 id="cert-subject"></h2>
+      <p id="cert-meta" class="hint"></p>
+      <h3>Certificate downloads</h3>
+      <div class="actions" id="keyless-buttons"></div>
+      <div id="key-section" class="hidden">
+        <h3>Certificate with private key</h3>
+        <p class="hint">
+          Choose a password (min 8 characters) to protect the bundle. It is built on the
+          spot with your password and is never emailed or stored.
+        </p>
+        <label>Bundle password <input id="bundle-password" type="password" minlength="8" autocomplete="new-password"></label>
+        <div class="actions" id="keyed-buttons"></div>
+        <p class="hint danger-text">⚠ "PEM + key" contains the private key UNENCRYPTED — prefer PKCS#12.</p>
+      </div>
+      <p id="download-status" class="hint"></p>
+    </section>
+
+    <section id="panel-renewal" class="panel hidden">
+      <h2 id="renew-subject"></h2>
+      <p id="renew-meta" class="hint"></p>
+      <p id="renew-auth-note"></p>
+      <form id="renew-form">
+        <fieldset>
+          <legend>Key handling</legend>
+          <label class="checkbox" id="mode-rotate-label">
+            <input type="radio" name="mode" value="rotate"> Generate a fresh key on the server (recommended)
+          </label>
+          <label class="checkbox" id="mode-reuse-label">
+            <input type="radio" name="mode" value="reuse"> Keep the existing key (reuse the original CSR)
+          </label>
+          <label class="checkbox">
+            <input type="radio" name="mode" value="csr"> I'll paste a new CSR
+          </label>
+        </fieldset>
+        <label id="renew-csr-field" class="hidden">New CSR PEM
+          <textarea name="csr_pem" rows="8" placeholder="-----BEGIN CERTIFICATE REQUEST-----"></textarea>
+        </label>
+        <button type="submit">Request renewal</button>
+      </form>
+      <p id="renew-status" class="hint"></p>
+    </section>
+
+    <section id="panel-renewed" class="panel hidden">
+      <h2>Renewal submitted ✓</h2>
+      <p id="renewed-message"></p>
+    </section>
+
+    <section id="panel-enroll" class="panel hidden">
+      <h2>Request your certificate</h2>
+      <p class="hint">You were invited by the operators. Pick a template and how to handle the key.</p>
+      <form id="enroll-form">
+        <label>Template <select name="template_id" id="enroll-template" required></select></label>
+        <label>Key source
+          <select id="enroll-key-source">
+            <option value="server">Generate a key for me (server-side)</option>
+            <option value="csr">I have a CSR</option>
+          </select>
+        </label>
+        <div id="enroll-server-fields">
+          <label>Common name <input name="common_name" placeholder="you@example.com or host.example.com"></label>
+          <label class="dns-san-field">DNS SANs (comma separated) <input name="dns_names" placeholder="host.example.com"></label>
+          <label class="email-san-field">Email SANs (comma separated) <input name="email_addresses" type="email" multiple placeholder="you@example.com"></label>
+          <label>Key algorithm <select name="algorithm" id="enroll-algorithm"></select></label>
+          <p class="hint">
+            The server generates the key pair and keeps it encrypted so you can download a
+            PKCS#12 bundle once the certificate is issued.
+          </p>
+        </div>
+        <div id="enroll-csr-fields" class="hidden">
+          <label>CSR PEM <textarea name="csr_pem" rows="8" placeholder="-----BEGIN CERTIFICATE REQUEST-----"></textarea></label>
+        </div>
+        <button type="submit">Submit request</button>
+      </form>
+      <p id="enroll-status" class="hint"></p>
+    </section>
+
+    <section id="panel-enrolled" class="panel hidden">
+      <h2>Request submitted ✓</h2>
+      <p id="enrolled-message"></p>
+    </section>
+  </main>
+
+  <script src="/app/assets/app_shared.js?v=22"></script>
+  <script src="/app/assets/holder.js?v=3"></script>
+</body>
+</html>

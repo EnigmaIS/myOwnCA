@@ -1,0 +1,31 @@
+# setuptools-scm needs repository metadata while building the application wheel.
+# Expose only the files required for version discovery; Dockerfile bind-mounts
+# them only for the install step, so they are not copied into the image.
+.git/*
+!.git/HEAD
+!.git/config
+!.git/index
+!.git/packed-refs
+!.git/shallow
+!.git/objects/
+!.git/objects/**
+!.git/refs/
+!.git/refs/**
+.gitignore
+.venv/
+var/
+tls/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.claude/
+docs/superpowers/
+tests/
+scripts/
+tools/license-issuer/
+Dockerfile
+docker-compose.yml
+nginx.conf
+.dockerignore

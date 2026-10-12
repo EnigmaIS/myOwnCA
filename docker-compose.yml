@@ -1,0 +1,72 @@
+services:
+  ca:
+    build:
+      context: .
+    image: myownca:dev
+    environment:
+      # MYOWNCA_SETUP_HOST=0.0.0.0 and MYOWNCA_BIND_HOST=0.0.0.0 are baked into
+      # the image (so a bare `docker run -p` works too); no need to repeat them.
+      MYOWNCA_SETUP_PORT: "8765"
+      MYOWNCA_BIND_PORT: "8000"
+      # nginx terminates TLS, so cookies must be Secure even though the app sees
+      # HTTP. This is topology-specific to the proxy, so it lives here, not in the
+      # image (a bare HTTP `docker run` must not force Secure cookies).
+      MYOWNCA_SESSION_COOKIE_SECURE: "true"
+      # Optional: pin the first-run token instead of reading it from `docker compose logs ca`.
+      # MYOWNCA_SETUP_TOKEN: "change-me-once"
+    volumes:
+      - myownca-state:/var/lib/myownca
+    ports:
+      # Published ONLY for first-run setup, and only to the host's loopback.
+      # Reach it from the host browser or via `ssh -L 8765:127.0.0.1:8765 <host>`.
+      # Remove this mapping once the wizard is finalized.
+      - "127.0.0.1:8765:8765"
+    restart: unless-stopped
+    networks:
+      - internal
+
+  proxy:
+    image: nginx:1.27
+    # Start-order only (NOT service_healthy): the CA is unhealthy during setup,
+    # so a health gate would block first run. nginx returns 502 until the
+    # service boots after finalize — that is expected.
+    depends_on:
+      - ca
+    # Fail fast with a clear message if the operator forgot the TLS material,
+    # instead of nginx's cryptic "PEM_read_bio_X509_AUX() ... no start line".
+    # (A missing ./tls/tls.crt becomes an empty bind-mount stub.) $$ escapes
+    # compose interpolation so the shell sees $.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        for f in /etc/nginx/tls/tls.crt /etc/nginx/tls/tls.key; do
+          if [ ! -f "$$f" ] || [ ! -s "$$f" ] || ! grep -q "BEGIN" "$$f" 2>/dev/null; then
+            echo "FATAL: $$f is missing or not a PEM file." >&2
+            echo "Provide the proxy's TLS material first: run ./scripts/gen-lab-cert.sh" >&2
+            echo "for a self-signed lab pair, or drop your own cert+key in ./tls/, then" >&2
+            echo "'docker compose up' again." >&2
+            exit 1
+          fi
+        done
+        exec /docker-entrypoint.sh nginx -g 'daemon off;'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./tls/tls.crt:/etc/nginx/tls/tls.crt:ro
+      - ./tls/tls.key:/etc/nginx/tls/tls.key:ro
+    restart: unless-stopped
+    networks:
+      - internal
+
+volumes:
+  myownca-state:
+    # Pin the physical volume name so it is NOT project-prefixed
+    # (e.g. <project>_myownca-state). Backup/restore docs reference the
+    # unqualified `myownca-state`, so this keeps those commands correct.
+    name: myownca-state
+
+networks:
+  internal:
