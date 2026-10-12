@@ -1,5 +1,15 @@
 # myOwnCA
 
+Official source snapshots from EnigmaIS are published as signed commits on
+`main`. The current source snapshot is `v0.12.5`. Each later snapshot is appended
+to the same history. See [code signature verification](docs/code-signing.md)
+for the public signing key and verification commands.
+
+Docker images: `ghcr.io/enigmais/myownca`.
+Official release bundles: <https://github.com/EnigmaIS/myOwnCA/releases>.
+Source snapshots and deployment artifacts are published independently; use the
+signed release bundles and their image digests for production deployments.
+
 Production releases use signed, prebuilt Docker images for Linux amd64 and ARM64.
 Standalone publication is deferred. See
 [release signing and integrity verification](docs/release-signing.md) for

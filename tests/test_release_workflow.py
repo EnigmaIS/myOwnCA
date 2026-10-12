@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import ed25519, rsa
 
 from myownca_release.sign import key_metadata, seal_wheel, write_signed
 from myownca_release.verify import fingerprint
@@ -259,17 +259,131 @@ def test_docker_acceptance_keeps_required_security_checks(work, monkeypatch, cha
         workflow.check_acceptance(work, directory)
 
 
-@pytest.mark.parametrize("files", [["src/app.py"], [".github/workflows/build.yml"], ["secret.pem"]])
-def test_public_destination_rejects_source_or_executable_tree(files, monkeypatch):
-    replies = iter([
-        {"nameWithOwner": "owner/releases", "isPrivate": False,
-         "defaultBranchRef": {"name": "main"}},
-        {"sha": "b" * 40},
-        {"tree": [{"path": name, "type": "blob", "mode": "100644"} for name in files]},
-    ])
-    monkeypatch.setattr(workflow, "run", lambda *a, **k: json.dumps(next(replies)))
-    with pytest.raises(VerificationError, match="only customer documentation"):
-        workflow.public_destination({"public_repo": "owner/releases", "commit": "a" * 40})
+def source_signing_key(directory, name="source"):
+    key = ed25519.Ed25519PrivateKey.generate()
+    private = directory / name
+    private.write_bytes(key.private_bytes(serialization.Encoding.PEM,
+                                         serialization.PrivateFormat.OpenSSH,
+                                         serialization.NoEncryption()))
+    private.chmod(0o600)
+    public = directory / f"{name}.pub"
+    public.write_bytes(key.public_key().public_bytes(serialization.Encoding.OpenSSH,
+                                                   serialization.PublicFormat.OpenSSH))
+    return private, public
+
+
+@pytest.fixture
+def public_snapshot(tmp_path, repo, monkeypatch):
+    for name in ("README.md", "docs/guide.md", "LICENSE", "AGENTS.md", "TODO", "archive/private.md"):
+        path = repo / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"test-only source fixture: {name}\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-m", "test(release): add source snapshot inputs")
+    info = {"public_repo": "owner/releases", "tag": "v1.2.3", "commit": git(repo, "rev-parse", "HEAD")}
+    private_key, signing_key = source_signing_key(tmp_path)
+    public = tmp_path / "public"
+    public.mkdir()
+    git(public, "init", "-b", "main")
+    for key, value in (("user.name", "Release Test"), ("user.email", "release@example.test"),
+                       ("gpg.format", "ssh"), ("user.signingkey", str(private_key)),
+                       ("commit.gpgsign", "true")):
+        git(public, "config", key, value)
+    for name in ("app.txt", "README.md", "docs/guide.md", "LICENSE"):
+        path = public / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(repo / name, path)
+    git(public, "add", ".")
+    message = f"chore(release): publish source snapshot\n\nSource-Tag: {info['tag']}\nSource-Commit: {info['commit']}"
+    git(public, "commit", "-m", message)
+    real_run = workflow.run
+    def fake_run(*args, **kwargs):
+        if args[:3] == ("gh", "repo", "view"):
+            return json.dumps({"nameWithOwner": "owner/releases", "isPrivate": False,
+                               "defaultBranchRef": {"name": "main"}})
+        if len(args) > 5 and args[0] == "git" and args[3:5] == ("fetch", "--no-tags"):
+            args = (*args[:5], public, *args[6:])
+        return real_run(*args, **kwargs)
+    monkeypatch.setattr(workflow, "run", fake_run)
+    return public, repo, signing_key, info, message
+
+
+def test_public_destination_accepts_signed_source_and_customer_docs(public_snapshot):
+    public, source, key, info, message = public_snapshot
+    (public / "README.md").write_text("Customer source inspection instructions.\n")
+    (public / "docs/code-signing.md").write_text("Trusted source signing instructions.\n")
+    git(public, "add", ".")
+    git(public, "commit", "-m", message)
+    assert workflow.public_destination(info, source, key) == git(public, "rev-parse", "HEAD")
+
+
+@pytest.mark.parametrize("change", ["content", "mode", "missing", "licence"])
+def test_public_destination_rejects_changed_source(public_snapshot, change):
+    public, source, key, info, message = public_snapshot
+    if change == "content":
+        (public / "app.txt").write_text("tampered source\n")
+    elif change == "mode":
+        (public / "app.txt").chmod(0o755)
+    elif change == "missing":
+        git(public, "rm", "app.txt")
+    else:
+        (public / "LICENSE").write_text("substituted terms\n")
+    git(public, "add", ".")
+    git(public, "commit", "-m", message)
+    with pytest.raises(VerificationError, match="missing source|source differs"):
+        workflow.public_destination(info, source, key)
+
+
+@pytest.mark.parametrize("name", ["private.pem", "AGENTS.md", "TODO", "archive/private.md",
+                                  ".github/workflows/unreviewed.yml"])
+def test_public_destination_rejects_unapproved_files(public_snapshot, name):
+    public, source, key, info, message = public_snapshot
+    path = public / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("test-only sentinel\n")
+    git(public, "add", ".")
+    git(public, "commit", "-m", message)
+    with pytest.raises(VerificationError, match="Unexpected public snapshot file"):
+        workflow.public_destination(info, source, key)
+
+
+@pytest.mark.parametrize("change", ["unsigned", "wrong_key", "wrong_tag", "wrong_commit", "duplicate"])
+def test_public_destination_rejects_wrong_identity(public_snapshot, tmp_path, change):
+    public, source, key, info, message = public_snapshot
+    if change == "unsigned":
+        git(public, "config", "commit.gpgsign", "false")
+    elif change == "wrong_key":
+        private, _ = source_signing_key(tmp_path, "other")
+        git(public, "config", "user.signingkey", str(private))
+    elif change == "wrong_tag":
+        message = message.replace("v1.2.3", "v1.2.4")
+    elif change == "wrong_commit":
+        message = message.replace(info["commit"], "a" * 40)
+    else:
+        message += f"\nSource-Commit: {info['commit']}"
+    git(public, "commit", "--allow-empty", "-m", message)
+    with pytest.raises(VerificationError, match="signature|version or source commit"):
+        workflow.public_destination(info, source, key)
+
+
+def test_public_destination_pins_snapshot_when_main_advances(public_snapshot):
+    public, source, key, info, _ = public_snapshot
+    reviewed = git(public, "rev-parse", "HEAD")
+    (public / "app.txt").write_text("next release\n")
+    git(public, "add", ".")
+    git(public, "commit", "-m", f"chore(release): publish next snapshot\n\nSource-Tag: v1.2.4\nSource-Commit: {'b' * 40}")
+    assert workflow.public_destination(info, source, key, reviewed) == reviewed
+    with pytest.raises(VerificationError, match="version or source commit"):
+        workflow.public_destination(info, source, key)
+
+
+def test_public_destination_rejects_private_history(public_snapshot):
+    public, source, key, info, message = public_snapshot
+    git(public, "fetch", source, info["commit"])
+    commit = git(public, "commit-tree", "HEAD^{tree}", "-p", info["commit"], "-S", "-m", message)
+    git(public, "update-ref", "refs/heads/main", commit)
+    with pytest.raises(VerificationError, match="private source history"):
+        workflow.public_destination(info, source, key)
 
 
 def test_registry_auth_failure_is_not_treated_as_image_absence(monkeypatch):
@@ -288,8 +402,10 @@ def test_publisher_rechecks_remote_before_finalizing(work, monkeypatch):
     monkeypatch.setattr(workflow, "verify_remote", reject)
     calls = []
     monkeypatch.setattr(workflow, "run", lambda *a, **k: calls.append(a))
+    workflow.write_json(work / "publication.json", {"public_commit": "b" * 40})
     with pytest.raises(VerificationError, match="remote mismatch"):
-        workflow.publish(argparse.Namespace(work=work, acceptance=work / "acceptance"))
+        workflow.publish(argparse.Namespace(work=work, acceptance=work / "acceptance",
+                                           source_signing_key=work / "test-source.pub"))
     assert calls == []
 
 
@@ -398,7 +514,11 @@ def test_stage_roundtrip_and_remote_tamper_block_publication(signed_work, monkey
     assert {p.name for p in acceptance.iterdir()} == {"docker-amd64", "docker-arm64"}
     notes = work / "notes.md"
     notes.write_text("Reviewed customer release notes.\n")
-    monkeypatch.setattr(workflow, "public_destination", lambda _: "c" * 40)
+    destinations = []
+    def destination(*args):
+        destinations.append(args)
+        return "c" * 40
+    monkeypatch.setattr(workflow, "public_destination", destination)
     monkeypatch.setattr(workflow, "release_exists", lambda _: False)
     monkeypatch.setattr(workflow, "public_tags", lambda _: {})
     uploads = {}
@@ -417,19 +537,25 @@ def test_stage_roundtrip_and_remote_tamper_block_publication(signed_work, monkey
                 (destination / name).write_bytes(data)
         return ""
     monkeypatch.setattr(workflow, "run", fake_gh)
-    workflow.stage(argparse.Namespace(work=work, acceptance=acceptance, notes=notes))
+    source_key = work / "test-source.pub"
+    workflow.stage(argparse.Namespace(work=work, acceptance=acceptance, notes=notes,
+                                     source_signing_key=source_key))
     assert len(uploads) == 4
     assert calls[0][0:3] == ("gh", "release", "create")
     assert "--draft" in calls[0]
     original = uploads["myownca-1.2.3-linux-amd64.zip"]
     uploads["myownca-1.2.3-linux-amd64.zip"] += b"tampered"
     with pytest.raises(VerificationError, match="Downloaded publication asset"):
-        workflow.publish(argparse.Namespace(work=work, acceptance=acceptance))
+        workflow.publish(argparse.Namespace(work=work, acceptance=acceptance,
+                                           source_signing_key=source_key))
     assert not any(call[:3] == ("gh", "release", "edit") for call in calls)
     uploads["myownca-1.2.3-linux-amd64.zip"] = original
     audits = []
     monkeypatch.setattr(workflow, "audit_public", lambda args: audits.append(args.work))
-    workflow.publish(argparse.Namespace(work=work, acceptance=acceptance))
+    workflow.publish(argparse.Namespace(work=work, acceptance=acceptance,
+                                       source_signing_key=source_key))
+    assert destinations[0] == (info, work / "source", source_key)
+    assert destinations[-1] == (info, work / "source", source_key, "c" * 40)
     assert any(call[:3] == ("gh", "release", "edit") for call in calls)
     assert audits == [work]
 

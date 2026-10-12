@@ -22,6 +22,9 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ed25519
+
 from myownca_release.sign import load_private, seal_wheel, wheel_contents
 from myownca_release.sign import main as sign_main
 from myownca_release.verify import (
@@ -460,27 +463,73 @@ def publication_assets(work, info, destination):
     (destination / "BOOTSTRAP-SHA256SUMS").write_text(checksums)
 
 
-def public_destination(info):
+def snapshot_tree(repo, commit, *, exclude_private=False):
+    """Read exact Git blobs and modes without copying private history."""
+    result = {}
+    for entry in run("git", "-C", repo, "ls-tree", "-rz", commit, capture=True).split("\0"):
+        if not entry:
+            continue
+        metadata, name = entry.split("\t", 1)
+        mode, kind, digest = metadata.split()
+        if exclude_private and (name in {"AGENTS.md", "TODO"} or name.startswith("archive/")):
+            continue
+        if kind != "blob" or mode not in {"100644", "100755"}:
+            raise VerificationError("Source snapshots require regular tracked files")
+        result[name] = (mode, digest)
+    return result
+
+
+def public_destination(info, source, signing_key, commit=None):
     repo = info["public_repo"]
     value = json.loads(run("gh", "repo", "view", repo, "--json",
                            "nameWithOwner,isPrivate,defaultBranchRef", capture=True))
     if value["isPrivate"] or value["nameWithOwner"].lower() != repo.lower():
         raise VerificationError("Publication requires the explicitly selected public repository")
-    branch = value["defaultBranchRef"]["name"]
-    commit = json.loads(run("gh", "api", f"repos/{repo}/commits/{branch}", capture=True))["sha"]
-    if commit == info["commit"]:
-        raise VerificationError("Public repository must have independent documentation history")
-    tree = json.loads(run("gh", "api", f"repos/{repo}/git/trees/{commit}?recursive=1", capture=True))
-    if tree.get("truncated"):
-        raise VerificationError("Cannot inspect the entire public repository tree")
-    for item in tree["tree"]:
-        if item["type"] == "tree":
-            continue
-        name = item["path"]
-        if (item["type"] != "blob" or item.get("mode") == "120000"
-                or not (name in {"README.md", "CHANGELOG.md", "SECURITY.md", "LICENSE", ".gitignore"}
-                        or name.startswith("docs/") and name.endswith(".md"))):
-            raise VerificationError("Public repository must contain only customer documentation")
+    if value["defaultBranchRef"]["name"] != "main":
+        raise VerificationError("Public source snapshots must use main")
+    key = serialization.load_ssh_public_key(signing_key.read_bytes())
+    if not isinstance(key, ed25519.Ed25519PublicKey):
+        raise VerificationError("Source signing requires an SSH Ed25519 public key")
+    public_key = key.public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
+    with tempfile.TemporaryDirectory(prefix="myownca-source-check-") as directory:
+        public = Path(directory) / "public"
+        allowed = Path(directory) / "allowed_signers"
+        allowed.write_bytes(b'* namespaces="git" ' + public_key + b"\n")
+        run("git", "init", "-q", public)
+        run("git", "-C", public, "fetch", "--no-tags",
+            f"https://github.com/{repo}.git", "refs/heads/main")
+        tip = run("git", "-C", public, "rev-parse", "FETCH_HEAD", capture=True)
+        commit = tip if commit is None else commit
+        if not re.fullmatch(r"[0-9a-f]{40,64}", commit) or commit == info["commit"]:
+            raise VerificationError("Public repository must have independent source history")
+        run("git", "-C", public, "merge-base", "--is-ancestor", commit, tip)
+        try:
+            run("git", "-C", public, "-c", "gpg.format=ssh", "-c",
+                f"gpg.ssh.allowedSignersFile={allowed}", "verify-commit", commit)
+        except subprocess.CalledProcessError as exc:
+            raise VerificationError("Public snapshot signature is invalid for the trusted source key") from exc
+        message = run("git", "-C", public, "show", "--no-patch", "--format=%B", commit, capture=True)
+        for label, expected in (("Source-Tag", info["tag"]), ("Source-Commit", info["commit"])):
+            values = re.findall(rf"^{label}: (.+)$", message, re.MULTILINE)
+            if values != [expected]:
+                raise VerificationError("Public snapshot version or source commit differs from release")
+        expected_tree = snapshot_tree(source, info["commit"], exclude_private=True)
+        public_tree = snapshot_tree(public, commit)
+        for name, entry in expected_tree.items():
+            if name not in public_tree:
+                raise VerificationError(f"Public snapshot is missing source file: {name}")
+            if name == "README.md" or name.startswith("docs/") and name.endswith(".md"):
+                continue
+            if public_tree[name] != entry:
+                raise VerificationError(f"Public snapshot source differs from release: {name}")
+        for name in public_tree.keys() - expected_tree.keys():
+            if name not in {"CHANGELOG.md", "SECURITY.md"} and not (
+                    name.startswith("docs/") and name.endswith(".md")):
+                raise VerificationError(f"Unexpected public snapshot file: {name}")
+        private_history = set(run("git", "-C", source, "rev-list", info["commit"], capture=True).splitlines())
+        public_history = set(run("git", "-C", public, "rev-list", tip, capture=True).splitlines())
+        if private_history & public_history:
+            raise VerificationError("Public snapshot includes private source history")
     return commit
 
 
@@ -499,7 +548,7 @@ def public_tags(info):
 def stage(args):
     work = args.work.resolve()
     info = check_acceptance(work, args.acceptance)
-    public_commit = public_destination(info)
+    public_commit = public_destination(info, work / "source", args.source_signing_key)
     if release_exists(info) or info["tag"] in public_tags(info):
         raise VerificationError("Public release or tag already exists; refusing to replace it")
     destination = work / "publication"
@@ -529,7 +578,7 @@ def verify_remote(work, info):
         raise VerificationError("Public release target changed")
     tag_commit = public_tags(info).get(info["tag"])
     if tag_commit is not None and tag_commit != expected["public_commit"]:
-        raise VerificationError("Public tag differs from the reviewed documentation commit")
+        raise VerificationError("Public tag differs from the reviewed source snapshot")
     if release["body"].strip() != (work / "release-notes.md").read_text().strip():
         raise VerificationError("Remote release notes differ from the reviewed notes")
     if sha256(work / "release-notes.md") != expected["notes_sha256"]:
@@ -579,7 +628,8 @@ def verify_publication(work, info, expected):
 def publish(args):
     work = args.work.resolve()
     info = check_acceptance(work, args.acceptance)
-    public_destination(info)
+    expected = read_json(work / "publication.json")
+    public_destination(info, work / "source", args.source_signing_key, expected["public_commit"])
     verify_remote(work, info)
     run("gh", "release", "edit", info["tag"], "--repo", info["public_repo"], "--draft=false")
     print("Release is now public. Checking anonymous access; failure will not unpublish it.")
@@ -592,7 +642,7 @@ def audit_public(args):
     expected = read_json(work / "publication.json")
     verify_publication(work, info, expected)
     if public_tags(info).get(info["tag"]) != expected["public_commit"]:
-        raise VerificationError("Published tag differs from the reviewed documentation commit")
+        raise VerificationError("Published tag differs from the reviewed source snapshot")
     with tempfile.TemporaryDirectory(prefix="myownca-public-audit-") as directory:
         root = Path(directory)
         for name, digest in expected["assets"].items():
@@ -654,6 +704,9 @@ def main(argv=None):
             command.add_argument("--wheels", type=Path, help="Reviewed prebuilt dependency wheels")
         if name in ("verify", "stage", "publish"):
             command.add_argument("--acceptance", type=Path, required=True)
+        if name in ("stage", "publish"):
+            command.add_argument("--source-signing-key", type=Path, required=True,
+                                 help="Independently trusted SSH Ed25519 public key for source commits")
         if name == "stage":
             command.add_argument("--notes", type=Path, required=True)
         if name == "record-acceptance":

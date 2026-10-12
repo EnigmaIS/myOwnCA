@@ -1,11 +1,12 @@
 # Publishing signed releases from the private repository
 
-The source repository stays private. A separate, independently initialized public
-GitHub repository contains only customer documentation and release attachments.
-GHCR contains the prebuilt application image. Never push the private repository's
-branches, tags or history into the public repository. The two repositories may
-use the same version tag name, but their tags point to different commits. The
-signed release manifest records the private source commit.
+The development repository and its history stay private. A separate public GitHub
+repository contains reviewed source snapshots on a single `main` branch, customer
+documentation and release attachments. Each release snapshot is a signed commit;
+later snapshots are appended to `main`. GHCR contains the prebuilt application
+image. Never mirror private Git history or create a branch for each release.
+The two repositories may use the same version tag name, but their tags point to
+different commits. The signed release manifest records the private source commit.
 
 Supported release targets:
 
@@ -34,10 +35,28 @@ Authenticate Docker to GHCR separately. Production keys never go to GitHub, Dock
 build contexts, CI, or customer machines. Signing prompts for the release-key
 passphrase; licensing uses its separate producer key.
 
-Initialize a **new** public GitHub repository with a customer README and an
-independent Git history. Do not clone/push the private repository to initialize
-it. The publisher checks that the selected public tree contains only README,
-CHANGELOG, SECURITY, LICENSE, `.gitignore`, and Markdown beneath `docs/`.
+Initialize the public repository with an independent source snapshot on `main`.
+Export tracked files from the approved private release commit, excluding
+`archive/`, `AGENTS.md` and `TODO`; review the export for secrets and confidential
+data before publication. Keep code, licences and executable modes exactly as in
+the release source. Customer-facing `README.md` and Markdown under `docs/` may be
+adapted; `CHANGELOG.md` and `SECURITY.md` may also be added. Do not copy `.git`.
+For later releases, replace the exported files and append a signed snapshot commit
+to the existing public `main`, retaining its independent public history.
+
+Use a dedicated SSH Ed25519 code-signing key, separate from the RSA release key.
+Register its public part as a GitHub signing key and sign each snapshot locally.
+Record these lines exactly once in the signed snapshot commit message:
+
+```text
+Source-Tag: vX.Y.Z
+Source-Commit: FULL_PRIVATE_RELEASE_COMMIT
+```
+
+Provision the trusted SSH public key independently on the operator host. Pass
+its file as `--source-signing-key` when staging or publishing. The publisher
+cryptographically verifies the snapshot against this key, checks the source
+revision and Git blobs/modes, and rejects unexpected files or private history.
 Give the publishing identity access only to the intended public repository and
 GHCR package. Set the GHCR package public and link it to this public repository;
 package visibility is separate from repository visibility. Check anonymous pulls.
@@ -205,25 +224,29 @@ The operator script and its environment belong on test/operator hosts only.
 python scripts/releases/release.py verify --work /secure/releases/X.Y.Z \
   --acceptance /secure/releases/acceptance
 python scripts/releases/release.py stage --work /secure/releases/X.Y.Z \
-  --acceptance /secure/releases/acceptance --notes /secure/releases/release-notes.md
+  --acceptance /secure/releases/acceptance --notes /secure/releases/release-notes.md \
+  --source-signing-key /secure/keys/source-signing.pub
 ```
 
 `stage` creates a draft in the explicitly selected public repository, targeting
-its independent documentation commit. It uploads only two architecture ZIPs,
+the verified source snapshot at the tip of `main`. It uploads only two architecture ZIPs,
 `release-trust.json` and `BOOTSTRAP-SHA256SUMS`; no source archives, standalone core
-wheel, issuer or private-repository Git refs are published. The application wheel
-naturally contains its runtime Python code. GitHub's generated source downloads
-contain only the public documentation repository.
+wheel or private-repository Git refs are uploaded. GitHub's generated source
+downloads contain the public snapshot. The reviewed snapshot SHA is recorded in
+the publication evidence and used as the release target.
 
 The publisher downloads the draft attachments and compares their bytes with the
 accepted bundles. Review the draft notes and attachments, then explicitly publish:
 
 ```sh
 python scripts/releases/release.py publish --work /secure/releases/X.Y.Z \
-  --acceptance /secure/releases/acceptance
+  --acceptance /secure/releases/acceptance \
+  --source-signing-key /secure/keys/source-signing.pub
 ```
 
-Publishing repeats acceptance and remote-byte checks, then automatically downloads
+Publishing reverifies the pinned snapshot's signature and source, including when
+`main` has advanced to a later release. It requires that snapshot to remain in
+the history of `main`. It repeats acceptance and remote-byte checks, then downloads
 the public assets without credentials and pulls both architectures using an empty
 Docker credentials directory. It checks the exact accepted bytes and image digest.
 If this post-publication check fails, the release is already public; fix visibility
