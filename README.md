@@ -1,21 +1,45 @@
 # myOwnCA
 
-Official source snapshots from EnigmaIS are published as signed commits on
-`main`. The current source snapshot is `v0.12.5`. Each later snapshot is appended
-to the same history. See [code signature verification](docs/code-signing.md)
-for the public signing key and verification commands.
+The current installation release is **v0.17.2**, with signed deployment bundles
+for Linux [amd64](releases/0.17.2/amd64/INSTALL.md) and
+[ARM64](releases/0.17.2/arm64/INSTALL.md). Matching prebuilt images are available
+at `docker.io/enigmais/myownca:0.17.2`. Use the authenticated digest pinned in the
+selected bundle's Compose file for deployment.
 
-Docker images: `ghcr.io/enigmais/myownca`.
-Official release bundles: <https://github.com/EnigmaIS/myOwnCA/releases>.
-Source snapshots and deployment artifacts are published independently; use the
-signed release bundles and their image digests for production deployments.
+Read the [release notes](releases/0.17.2/RELEASE-NOTES.md), including the authorized
+ARM64 emulation and deferred native testing, before installation or upgrade.
 
-Production releases use signed, prebuilt Docker images for Linux amd64 and ARM64.
-Standalone publication is deferred. See
-[release signing and integrity verification](docs/release-signing.md) for
-authenticated container deployment, startup enforcement, daily external
-monitoring, and release-key custody. Editable source installs and the original
-Docker Compose stack are development workflows.
+## Authenticate the release
+
+Obtain the developer's SSH signing public key independently of this repository.
+Provision an administrator-owned Git allowed-signers file containing that trusted
+key, with the principal `myownca-release` and the `git` namespace. Then clone and
+verify the selected release before running any downloaded code:
+
+```sh
+git clone --branch v0.17.2 https://github.com/EnigmaIS/myOwnCA.git myownca-install
+cd myownca-install
+git -c gpg.format=ssh \
+  -c gpg.ssh.allowedSignersFile=/trusted/myownca-allowed-signers \
+  verify-commit HEAD
+git status --porcelain --untracked-files=all
+```
+
+Signature verification must succeed and the status output must be empty. An
+allowed-signers entry has the form `myownca-release namespaces="git" ssh-ed25519
+PUBLIC_KEY_DATA`; replace `PUBLIC_KEY_DATA` with the independently authenticated
+key data. A key downloaded beside the release does not establish trust.
+
+Also obtain the complete `BOOTSTRAP-SHA256SUMS` file and release-key fingerprint
+through an independent authenticated channel. Check the hashes from
+`releases/0.17.2/` and follow the selected architecture's INSTALL.md to provision
+the verifier, authenticate the bundle and prepare Docker deployment. Preserve
+signed bundles and state backups for recovery.
+
+Installation releases and source snapshots are published independently. The source
+snapshot retained here is **v0.12.5**; the development instructions and source
+documentation below describe that snapshot. The v0.17.2 installation instructions
+linked above are the entry point for production deployment.
 
 **A private, self-hosted Certificate Authority for small businesses and home labs —
 browser-driven, offline-root-capable, and free for genuine noncommercial use.**

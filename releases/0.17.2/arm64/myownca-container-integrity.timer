@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily external myOwnCA container integrity check
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15m
+Unit=myownca-container-integrity.service
+
+[Install]
+WantedBy=timers.target

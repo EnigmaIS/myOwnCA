@@ -1,0 +1,47 @@
+services:
+  ca:
+    image: "docker.io/enigmais/myownca@sha256:a86092782058f61d38ca06017c2ee6f47b3cc65c37cd2ea8344b711cb0ed749f"
+    platform: "linux/arm64"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    environment:
+      MYOWNCA_SESSION_COOKIE_SECURE: "true"
+    volumes:
+      - myownca-state:/var/lib/myownca
+    ports:
+      - "127.0.0.1:8765:8765"
+    restart: unless-stopped
+    networks: [internal]
+  proxy:
+    image: "nginx:stable@sha256:a7675fcee220f59b4a99f7098c06a0d5d999c2c0ee37c0211efb780536e5cb20"
+    platform: "linux/arm64"
+    depends_on: [ca]
+    ports: ["80:80", "443:443"]
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ./tls/tls.crt
+        target: /etc/nginx/tls/tls.crt
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ./tls/tls.key
+        target: /etc/nginx/tls/tls.key
+        read_only: true
+        bind: {create_host_path: false}
+    restart: unless-stopped
+    networks: [internal]
+volumes:
+  myownca-state:
+    external: true
+    name: myownca-state
+networks:
+  internal:
