@@ -1,13 +1,13 @@
 # myOwnCA
 
-The current installation release is **v0.17.2**, with signed deployment bundles
-for Linux [amd64](releases/0.17.2/amd64/INSTALL.md) and
-[ARM64](releases/0.17.2/arm64/INSTALL.md). Matching prebuilt images are available
-at `docker.io/enigmais/myownca:0.17.2`. Use the authenticated digest pinned in the
+The current installation release is **v0.27.0**, with signed deployment bundles
+for Linux [amd64](releases/0.27.0/amd64/INSTALL.md) and
+[ARM64](releases/0.27.0/arm64/INSTALL.md). Matching prebuilt images are available
+at `docker.io/enigmais/myownca:0.27.0`. Use the authenticated digest pinned in the
 selected bundle's Compose file for deployment.
 
-Read the [release notes](releases/0.17.2/RELEASE-NOTES.md), including the authorized
-ARM64 emulation and deferred native testing, before installation or upgrade.
+Read the [release notes](releases/0.27.0/RELEASE-NOTES.md), including the batch import capability and
+upgrade compatibility requirements, before installation or upgrade.
 
 ## Authenticate the release
 
@@ -17,7 +17,7 @@ key, with the principal `myownca-release` and the `git` namespace. Then clone an
 verify the selected release before running any downloaded code:
 
 ```sh
-git clone --branch v0.17.2 https://github.com/EnigmaIS/myOwnCA.git myownca-install
+git clone --branch v0.27.0 https://github.com/EnigmaIS/myOwnCA.git myownca-install
 cd myownca-install
 git -c gpg.format=ssh \
   -c gpg.ssh.allowedSignersFile=/trusted/myownca-allowed-signers \
@@ -32,13 +32,13 @@ key data. A key downloaded beside the release does not establish trust.
 
 Also obtain the complete `BOOTSTRAP-SHA256SUMS` file and release-key fingerprint
 through an independent authenticated channel. Check the hashes from
-`releases/0.17.2/` and follow the selected architecture's INSTALL.md to provision
+`releases/0.27.0/` and follow the selected architecture's INSTALL.md to provision
 the verifier, authenticate the bundle and prepare Docker deployment. Preserve
 signed bundles and state backups for recovery.
 
 Installation releases and source snapshots are published independently. The source
 snapshot retained here is **v0.12.5**; the development instructions and source
-documentation below describe that snapshot. The v0.17.2 installation instructions
+documentation below describe that snapshot. The v0.27.0 installation instructions
 linked above are the entry point for production deployment.
 
 **A private, self-hosted Certificate Authority for small businesses and home labs —

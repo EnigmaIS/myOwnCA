@@ -1,0 +1,16 @@
+[Unit]
+Description=External myOwnCA container integrity check
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# Docker socket access is privileged; protect this host-side verifier accordingly.
+EnvironmentFile=/etc/myownca-integrity/container.env
+ExecStart=/opt/myownca-verifier/bin/myownca-verify --json --webhook-config /etc/myownca-integrity/webhook.json --status-file /var/lib/myownca-integrity/last-check.json container --container ${MYOWNCA_CONTAINER} --name ca --bundle ${MYOWNCA_RELEASE_BUNDLE} --version ${MYOWNCA_RELEASE_VERSION} --trust /etc/myownca-integrity/release-trust.json
+StateDirectory=myownca-integrity
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

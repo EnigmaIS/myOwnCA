@@ -1,0 +1,131 @@
+EnigmaIS Source-Available Licence 1.0
+
+Copyright (c) 2026 EnigmaIS sp. z o. o. All rights reserved.
+
+Licensor: EnigmaIS sp. z o. o., trading as EnigmaIS ("EnigmaIS").
+Contact: info@enigmais.com
+Licensing information: https://enigmais.com/licensing/
+
+1. Scope
+
+This licence governs the EnigmaIS-owned myOwnCA software, accompanying release
+verification tools, and documentation supplied with this licence (the
+"Software"). It is a source-available licence, not an open-source licence.
+Availability of source code permits inspection; it does not grant permission
+to modify or redistribute the Software.
+
+By exercising the permissions below, you agree to their conditions. Rights
+that applicable law does not allow to be excluded or restricted are unaffected.
+Third-party components are addressed separately in section 7.
+
+2. Source inspection and noncommercial use
+
+You may read and inspect the supplied source code. You may download, install,
+run, and make necessary internal deployment and backup copies of unmodified
+official releases for genuine noncommercial use, subject to this licence and
+the product restrictions below. Keep copyright, licence, and attribution
+notices intact. You may use the accompanying verification tools to authenticate
+official EnigmaIS releases.
+
+Noncommercial use includes personal projects, home labs, and education or
+evaluation that is genuinely noncommercial. Use for the operation or benefit
+of a business or commercial activity is commercial use. Evaluation for a
+commercial deployment is also commercial use. Merely staying below a product
+capacity limit does not make commercial use noncommercial.
+
+The free myOwnCA allowance is 10 active certificate identities (lineages).
+Genuine renewals, including key rotation, remain in the same identity slot.
+Changing a certificate identity creates a new lineage. Imported external
+certificates do not count toward this allowance.
+
+3. Commercial use and customer licences
+
+Every commercial use requires paid licensing terms agreed with EnigmaIS,
+regardless of organisation size, deployment size, or certificate count. This
+licence alone does not grant commercial use rights. Separately agreed written
+commercial terms govern the additional permissions they expressly grant and
+take precedence in the event of a conflict with this licence.
+
+myOwnCA customer licence tokens are signed, installation-bound, and verified
+offline. They record the recipient, installation, capacity, and validity period.
+They must be used only for the authorised installation and under the agreed
+terms. Possession of a token does not grant rights beyond those terms.
+
+Renewal, revocation, CRL and OCSP generation, export, lifecycle monitoring,
+notifications, audit, and recovery are not gated by paid certificate capacity.
+Expiry or absence of a token does not itself grant permission for commercial
+use, even if technical operations continue to function. The ability to run
+software or issue a certificate is not evidence of a legal entitlement to do so.
+
+4. Configuration, integration, and restrictions
+
+Normal product settings, supported APIs, integrations through those APIs, and
+deployment configuration are permitted within your authorised use. These
+permissions do not permit changes to the application source or replacement of
+its licensing or integrity controls. Your operational configuration, keys,
+certificates, and database records are not EnigmaIS source code merely because
+the Software creates or uses them.
+
+Except as permitted by non-excludable applicable law or expressly authorised
+by EnigmaIS in writing, you may not:
+
+  - modify EnigmaIS source code or create derivative versions of the Software;
+  - remove or bypass licensing, capacity, signature, or integrity controls;
+  - forge, alter, or reuse customer licence tokens outside their authorised
+    installation and terms;
+  - remove or obscure ownership, copyright, licence, or attribution notices;
+  - redistribute the Software to others, operate public mirrors, resell,
+    sublicense, or offer hosted access to it without written authorisation.
+
+These restrictions apply to both free and paid use unless separately agreed
+written terms expressly provide otherwise. They do not restrict rights granted
+by a third-party component's own licence.
+
+5. Copies and official distribution
+
+You may retain unmodified copies for your own authorised internal deployments
+and backups. This does not grant permission to distribute copies to separate
+customers, other organisations, or the public. Direct other users to official
+EnigmaIS download locations instead. Linking to those locations is permitted.
+Container images, wheels, archives, and copies of supplied source code are all
+subject to these distribution conditions.
+
+6. Ownership and duration
+
+EnigmaIS retains its ownership of the Software and all rights not expressly
+granted. No trademark or endorsement rights are granted. Your permissions are
+conditional on compliance with this licence and any applicable commercial
+agreement. A commercial agreement may specify its own term and termination
+conditions. Nothing here grants rights to future releases, maintenance,
+support, or updates unless separately agreed.
+
+7. Third-party components
+
+Third-party software and materials remain governed by their own licences,
+including their permissions and obligations concerning use, modification,
+redistribution, notices, and source availability. This licence does not replace
+or reduce those rights. Preserve their licence and attribution notices.
+EnigmaIS claims no ownership of third-party components through this licence.
+
+8. Warranty, liability, and mandatory rights
+
+Except as expressly agreed in writing or required by applicable law, the
+Software is provided "as is" and "as available", without warranties, including
+warranties of merchantability, fitness for a particular purpose, and
+non-infringement. You are responsible for assessing suitability, protecting
+operational keys and data, backups, deployment security, and operating the
+Software appropriately.
+
+To the extent permitted by applicable law, EnigmaIS excludes liability for
+indirect or consequential loss, lost profits, lost data, and business
+interruption arising from use of or inability to use the Software. This does
+not exclude or limit liability, consumer rights, or other protections that
+applicable law does not allow to be excluded or limited. Express warranties,
+support commitments, and liability terms in a separate written commercial
+agreement remain effective.
+
+If a provision is unenforceable, the remaining provisions continue to apply to
+the extent permitted by law. Contact EnigmaIS for commercial terms or written
+permission beyond the grants in this licence. The website provides a policy
+summary; this supplied licence and any applicable written commercial agreement
+set out the terms for this release.
