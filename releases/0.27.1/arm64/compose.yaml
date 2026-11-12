@@ -1,6 +1,6 @@
 services:
   ca:
-    image: "docker.io/enigmais/myownca@sha256:7f365ac8515f8acf0bf1cf341a06524335a6c00afb652542f1b5bdffe5d2630f"
+    image: "docker.io/enigmais/myownca@sha256:880a0937587732fbd65c0e5077a3c6ab541e29bdc59db3174159a3f6b180507b"
     platform: "linux/arm64"
     read_only: true
     cap_drop: [ALL]

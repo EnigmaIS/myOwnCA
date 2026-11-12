@@ -1,6 +1,14 @@
-# myOwnCA v0.27.0
+# myOwnCA v0.27.1
 
-Source commit: `9c30747dc65f7de73d0630904a2222c286827ff3`.
+Source commit: `a5ecd0bc6a9813857c09c2b7b760f246b4a4f133`.
+
+## Security fix since v0.27.0
+
+Upgrade the Debian zlib runtime to 1:1.3.dfsg+really1.3.1-1+deb13u1 or newer
+to fix CVE-2026-76844 and CVE-2026-85091. Both Docker builds enforce the
+minimum patched version. Production builds now require Debian repository access.
+The disputed GNU tar finding CVE-2025-45582 remains unchanged.
+No application API or schema changes are introduced by this patch.
 
 ## Batch import and certificate pre-generation
 
@@ -24,7 +32,7 @@ Processing supports checkpoint recovery, explicit retry, and audited cancellatio
 
 ## Upgrade and rollback
 
-Take a matched state/database backup before upgrade. The release introduces
+Take a matched state/database backup before upgrade. Upgrades from releases before v0.27.0 introduce
 database migrations and compatibility changes to holder retirement workflows.
 Before stopping the running service, run the target image's read-only
 `myownca --state-dir /path/to/state upgrade check` against the existing state and

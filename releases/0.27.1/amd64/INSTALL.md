@@ -1,4 +1,4 @@
-# myOwnCA 0.27.0 — Docker on Linux amd64
+# myOwnCA 0.27.1 — Docker on Linux amd64
 
 This directory contains the signed verification and deployment material for the
 prebuilt Docker Hub image. Docker on Linux amd64 and ARM64 are the supported release
@@ -29,7 +29,7 @@ in its own environment, separate from the application:
 python3.12 -m venv /opt/myownca-verifier
 /opt/myownca-verifier/bin/python -m pip --isolated install --no-index --no-compile \
   --only-binary=:all: --find-links /absolute/path/to/bundle \
-  /absolute/path/to/bundle/myownca_release_tools-0.27.0-py3-none-any.whl
+  /absolute/path/to/bundle/myownca_release_tools-0.27.1-py3-none-any.whl
 ```
 
 Install the authenticated public trust file as
@@ -39,7 +39,7 @@ verifier's `bin` directory to PATH. Before installation, run:
 
 ```sh
 myownca-verify --json artifact --bundle /absolute/path/to/bundle \
-  --version 0.27.0 --trust /etc/myownca-integrity/release-trust.json
+  --version 0.27.1 --trust /etc/myownca-integrity/release-trust.json
 ```
 
 ## Docker
@@ -47,7 +47,7 @@ myownca-verify --json artifact --bundle /absolute/path/to/bundle \
 Docker Engine and Compose v2 are prerequisites. The Linux image runs on amd64 or
 ARM64; use the package matching your Docker host. Do not build an image locally.
 The signed Compose file pins the application and proxy by digest. The application
-image is `docker.io/enigmais/myownca@sha256:7f365ac8515f8acf0bf1cf341a06524335a6c00afb652542f1b5bdffe5d2630f`.
+image is `docker.io/enigmais/myownca@sha256:880a0937587732fbd65c0e5077a3c6ab541e29bdc59db3174159a3f6b180507b`.
 
 The CA runs as an unprivileged user with a read-only root filesystem, all Linux
 capabilities dropped, and `no-new-privileges` enabled. State stays writable in its
